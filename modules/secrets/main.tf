@@ -1,0 +1,27 @@
+resource "aws_ssm_parameter" "pinecone_key" {
+  name  = "/${var.env}/cosmonaut/pinecone_api_key"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "openai_key" {
+  name  = "/${var.env}/cosmonaut/openai_api_key"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "google_client_secret" {
+  name  = "/${var.env}/cosmonaut/google_client_secret"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
