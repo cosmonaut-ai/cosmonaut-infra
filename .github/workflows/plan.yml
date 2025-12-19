@@ -24,11 +24,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate AWS Role ARN Secret
+        run: |
+          if [ -z "${{ secrets.AWS_ROLE_ARN }}" ]; then
+            echo "::error::AWS_ROLE_ARN secret is not set in GitHub repository secrets"
+            echo "Please set it to the ARN of the IAM role created by the cicd module"
+            echo "You can get the ARN by running: terraform output -raw github_actions_role_arn"
+            exit 1
+          fi
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-2
+          role-session-name: GitHubActions-TerraformPlan
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
