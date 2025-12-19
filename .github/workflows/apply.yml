@@ -9,6 +9,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
 jobs:
   apply:
     name: Terraform Apply
@@ -24,7 +27,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: us-east-2
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -36,4 +39,3 @@ jobs:
       - name: Terraform Apply
         working-directory: envs/${{ matrix.env }}
         run: terraform apply -auto-approve
-

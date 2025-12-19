@@ -6,11 +6,19 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
 }
 
 module "secrets" {
@@ -24,12 +32,11 @@ module "persistence" {
 }
 
 module "identity" {
-  source               = "../../modules/identity"
-  env                  = "prod"
-  google_client_id     = var.google_client_id
-  google_client_secret = module.secrets.google_client_secret_arn
-  callback_urls        = ["https://cosmonaut-ai.com/callback"]
-  logout_urls          = ["https://cosmonaut-ai.com"]
+  source           = "../../modules/identity"
+  env              = "prod"
+  google_client_id = var.google_client_id
+  callback_urls    = ["https://cosmonaut-ai.com/callback"]
+  logout_urls      = ["https://cosmonaut-ai.com"]
 }
 
 module "compute" {
@@ -38,7 +45,7 @@ module "compute" {
   dynamodb_table_arn = module.persistence.table_arn
   ssm_parameter_arns = [
     module.secrets.pinecone_key_arn,
-    module.secrets.openai_key_arn
+    module.secrets.gemini_key_arn
   ]
 }
 
@@ -46,7 +53,14 @@ module "frontend" {
   source      = "../../modules/frontend"
   env         = "prod"
   domain_name = "cosmonaut-ai.com"
-  zone_id     = var.zone_id
+}
+
+module "dns" {
+  source                 = "../../modules/dns"
+  domain_name            = "cosmonaut-ai.com"
+  record_name            = "@" # @ represents the root domain
+  cloudfront_domain_name = module.frontend.cloudfront_domain_name
+  acm_validation_records = module.frontend.acm_validation_records
 }
 
 module "cicd" {
@@ -55,10 +69,13 @@ module "cicd" {
 }
 
 variable "google_client_id" {
-  type = string
+  type        = string
+  description = "Google OAuth Client ID"
 }
 
-variable "zone_id" {
-  type = string
+variable "cloudflare_api_token" {
+  type        = string
+  description = "Cloudflare API Token with DNS edit permissions"
+  sensitive   = true
 }
 

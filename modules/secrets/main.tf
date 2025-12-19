@@ -7,8 +7,8 @@ resource "aws_ssm_parameter" "pinecone_key" {
   }
 }
 
-resource "aws_ssm_parameter" "openai_key" {
-  name  = "/${var.env}/cosmonaut/openai_api_key"
+resource "aws_ssm_parameter" "gemini_key" {
+  name  = "/${var.env}/cosmonaut/gemini_api_key"
   type  = "SecureString"
   value = "CHANGE_ME"
   lifecycle {

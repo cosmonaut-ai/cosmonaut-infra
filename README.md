@@ -29,8 +29,14 @@ Use the helper script to push required API keys to AWS SSM Parameter Store:
 To deploy the development environment:
 
 ```bash
+# 1. Bootstrap the state bucket (first time only)
+./scripts/bootstrap_state_bucket.sh
+
+# 2. Initialize Terraform
 cd envs/dev
 terraform init
+
+# 3. Review and apply
 terraform plan
 terraform apply
 ```

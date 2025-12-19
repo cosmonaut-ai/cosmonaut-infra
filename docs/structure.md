@@ -77,7 +77,7 @@ Your Lambda needs permission to decrypt these keys at runtime.
 ```hcl
 statement {
   actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-  resources = ["arn:aws:ssm:us-east-1:*:parameter/${var.env}/cosmonaut/*"]
+  resources = ["arn:aws:ssm:us-east-2:*:parameter/${var.env}/cosmonaut/*"]
 }
 
 ```

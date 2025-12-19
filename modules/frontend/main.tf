@@ -18,6 +18,36 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   signing_protocol                  = "sigv4"
 }
 
+# CloudFront requires ACM certificates to be in us-east-1
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
+resource "aws_acm_certificate" "cert" {
+  provider          = aws.us_east_1
+  domain_name       = var.domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Note: Certificate validation records are output for DNS module to create
+# The certificate validation resource waits for DNS validation to complete
+# This ensures the certificate is fully validated before CloudFront uses it
+resource "aws_acm_certificate_validation" "cert" {
+  provider        = aws.us_east_1
+  certificate_arn = aws_acm_certificate.cert.arn
+
+  # Wait for DNS validation records to be created (they're created by the DNS module)
+  # This will wait for validation to complete before proceeding
+  timeouts {
+    create = "5m"
+  }
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -51,15 +81,15 @@ resource "aws_cloudfront_distribution" "frontend" {
 
   # SPA Routing
   custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
   }
 
   custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
   }
 
   restrictions {
@@ -69,19 +99,13 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cert.arn
+    acm_certificate_arn      = aws_acm_certificate_validation.cert.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
-}
 
-resource "aws_acm_certificate" "cert" {
-  domain_name       = var.domain_name
-  validation_method = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  # Wait for certificate validation before creating distribution
+  depends_on = [aws_acm_certificate_validation.cert]
 }
 
 resource "aws_s3_bucket_policy" "frontend" {

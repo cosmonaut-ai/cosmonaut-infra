@@ -8,12 +8,6 @@ variable "google_client_id" {
   type        = string
 }
 
-variable "google_client_secret" {
-  description = "Google OAuth Client Secret (retrieved from SSM)"
-  type        = string
-  sensitive   = true
-}
-
 variable "callback_urls" {
   description = "Allowed callback URLs for Cognito"
   type        = list(string)

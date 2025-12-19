@@ -12,3 +12,5 @@
 
 # Scripts
 scripts/*.log
+.envrc
+.vscode

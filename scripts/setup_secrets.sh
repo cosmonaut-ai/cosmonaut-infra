@@ -33,7 +33,7 @@ read_secret() {
 
 # List of secrets to set up
 read_secret "pinecone_api_key"
-read_secret "openai_api_key"
+read_secret "gemini_api_key"
 read_secret "google_client_secret"
 
 echo "All secrets updated for $ENV."
