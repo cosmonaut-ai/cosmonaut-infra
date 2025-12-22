@@ -15,6 +15,10 @@ resource "aws_dynamodb_table" "main" {
   }
 
   attribute {
+    name = "expiration"
+    type = "N"
+  }
+  attribute {
     name = "GSI1PK"
     type = "S"
   }
@@ -29,6 +33,11 @@ resource "aws_dynamodb_table" "main" {
     hash_key        = "GSI1PK"
     range_key       = "GSI1SK"
     projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "expiration"
+    enabled        = true
   }
 
   tags = {
