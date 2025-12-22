@@ -15,10 +15,6 @@ resource "aws_dynamodb_table" "main" {
   }
 
   attribute {
-    name = "expiration"
-    type = "N"
-  }
-  attribute {
     name = "GSI1PK"
     type = "S"
   }
