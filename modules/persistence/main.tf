@@ -46,7 +46,7 @@ resource "aws_dynamodb_table" "main" {
     hash_key           = "GSI2PK"
     range_key          = "GSI2SK"
     projection_type    = "INCLUDE"
-    non_key_attributes = ["title", "parent_id", "choices"]
+    non_key_attributes = ["node_title", "node_parent_id", "node_choices"]
   }
 
   ttl {
