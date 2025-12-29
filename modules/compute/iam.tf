@@ -44,6 +44,17 @@ resource "aws_iam_policy" "lambda_extra" {
         Action   = ["ssm:GetParameter", "ssm:GetParameters"]
         Effect   = "Allow"
         Resource = var.ssm_parameter_arns
+      },
+      {
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility",
+          "sqs:GetQueueUrl"
+        ]
+        Effect   = "Allow"
+        Resource = [aws_sqs_queue.fast.arn, aws_sqs_queue.slow.arn]
       }
     ]
   })

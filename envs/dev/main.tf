@@ -47,6 +47,7 @@ module "compute" {
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn
   ]
+  lambda_arn = var.lambda_arn
 }
 
 module "frontend" {
@@ -77,5 +78,10 @@ variable "cloudflare_api_token" {
   type        = string
   description = "Cloudflare API Token with DNS edit permissions"
   sensitive   = true
+}
+
+variable "lambda_arn" {
+  type        = string
+  description = "ARN of the shared Lambda function"
 }
 

@@ -13,3 +13,8 @@ variable "ssm_parameter_arns" {
   type        = list(string)
 }
 
+variable "lambda_arn" {
+  description = "ARN of the shared Lambda function (used by API and SQS worker handler)"
+  type        = string
+}
+
