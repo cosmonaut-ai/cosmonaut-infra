@@ -1,16 +1,22 @@
 # Get current AWS account ID to construct OIDC provider ARN
 data "aws_caller_identity" "current" {}
 
+locals {
+  github_oidc_provider_arn = "arn:aws:iam::467508858251:oidc-provider/token.actions.githubusercontent.com"
+}
+
 # Reference existing GitHub Actions OIDC provider (already exists in AWS)
 # ARN format: arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com
 # Create the OIDC Provider in AWS to trust GitHub Actions
 resource "aws_iam_openid_connect_provider" "github" {
+  count = var.env == "dev" ? 1 : 0
+
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
 
   # GitHub's OIDC Thumbprint (Required by AWS)
   # This matches the certificate for token.actions.githubusercontent.com
-  thumbprint_list = ["1c58a3a8518e8759bf075b76b750d4f2df264fcd"]
+  thumbprint_list = ["1c58a3a8518e8759bf075b76b750d4f2df264fcd", "6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
 resource "aws_iam_role" "github_actions" {
@@ -23,7 +29,7 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github.arn
+          Federated = local.github_oidc_provider_arn
         }
         Condition = {
           StringLike = {
