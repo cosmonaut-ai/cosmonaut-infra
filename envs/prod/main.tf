@@ -73,7 +73,8 @@ module "dns" {
 
 module "cicd" {
   source      = "../../modules/cicd"
-  github_repo = "cosmonaut-ai/cosmonaut-infra" # Update with actual repo
+  github_repo = "cosmonaut-ai/cosmonaut-api"
+  env         = "prod"
 }
 
 variable "google_client_id" {
