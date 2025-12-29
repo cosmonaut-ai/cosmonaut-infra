@@ -14,6 +14,9 @@ resource "aws_lambda_event_source_mapping" "fast_queue" {
   event_source_arn = aws_sqs_queue.fast.arn
   function_name    = aws_lambda_function.worker_fast.function_name
   batch_size       = 10
+
+  # Enable partial batch response so workers can return per-message failures
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_lambda_event_source_mapping" "slow_queue" {
@@ -24,6 +27,9 @@ resource "aws_lambda_event_source_mapping" "slow_queue" {
   scaling_config {
     maximum_concurrency = 50
   }
+
+  # Enable partial batch response so workers can return per-message failures
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 # 1. API Lambda (The Entrypoint)
