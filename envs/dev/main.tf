@@ -47,7 +47,9 @@ module "compute" {
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn
   ]
-  lambda_arn = var.lambda_arn
+  api_lambda_arn         = var.api_lambda_arn
+  slow_worker_lambda_arn = var.slow_worker_lambda_arn
+  fast_worker_lambda_arn = var.fast_worker_lambda_arn
 }
 
 module "frontend" {
@@ -80,8 +82,17 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
-variable "lambda_arn" {
+variable "api_lambda_arn" {
   type        = string
-  description = "ARN of the shared Lambda function"
+  description = "ARN of the API Lambda function"
 }
 
+variable "slow_worker_lambda_arn" {
+  type        = string
+  description = "ARN of the slow worker Lambda function"
+}
+
+variable "fast_worker_lambda_arn" {
+  type        = string
+  description = "ARN of the fast worker Lambda function"
+}
