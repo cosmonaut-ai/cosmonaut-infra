@@ -34,3 +34,13 @@ resource "aws_iam_role_policy_attachment" "admin" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess" # For initial setup, can be narrowed later
 }
 
+
+resource "aws_ecr_repository" "repo" {
+  name                 = "cosmonaut-repo"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+

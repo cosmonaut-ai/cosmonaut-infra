@@ -47,9 +47,14 @@ module "compute" {
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn
   ]
-  api_lambda_arn         = var.api_lambda_arn
-  slow_worker_lambda_arn = var.slow_worker_lambda_arn
-  fast_worker_lambda_arn = var.fast_worker_lambda_arn
+  api_lambda_image_uri         = var.api_lambda_image_uri
+  slow_worker_lambda_image_uri = var.slow_worker_lambda_image_uri
+  fast_worker_lambda_image_uri = var.fast_worker_lambda_image_uri
+  pinecone_index_name          = var.pinecone_index_name
+  cognito_user_pool_id         = module.identity.cognito_user_pool_id
+  cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
+  cors_allowed_origins         = ["https://dev.cosmonaut-ai.com", "http://localhost:5173"]
+  mock_auth                    = false
 }
 
 module "frontend" {
@@ -68,7 +73,7 @@ module "dns" {
 
 module "cicd" {
   source      = "../../modules/cicd"
-  github_repo = "your-org/cosmonaut-infra" # Update with actual repo
+  github_repo = "cosmonaut-ai/cosmonaut-infra" # Update with actual repo
 }
 
 variable "google_client_id" {
@@ -82,17 +87,22 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
-variable "api_lambda_arn" {
+variable "api_lambda_image_uri" {
   type        = string
-  description = "ARN of the API Lambda function"
+  description = "Image URI of the API Lambda function"
 }
 
-variable "slow_worker_lambda_arn" {
+variable "slow_worker_lambda_image_uri" {
   type        = string
-  description = "ARN of the slow worker Lambda function"
+  description = "Image URI of the slow worker Lambda function"
 }
 
-variable "fast_worker_lambda_arn" {
+variable "fast_worker_lambda_image_uri" {
   type        = string
-  description = "ARN of the fast worker Lambda function"
+  description = "Image URI of the fast worker Lambda function"
+}
+
+variable "pinecone_index_name" {
+  type        = string
+  description = "Name of the Pinecone index"
 }
