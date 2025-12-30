@@ -185,10 +185,8 @@ resource "aws_cloudfront_distribution" "api" {
   web_acl_id = var.existing_waf_arn != null ? var.existing_waf_arn : aws_wafv2_web_acl.api_protection[0].arn
 
   origin {
-    # Strip protocol for CloudFront
     domain_name = replace(replace(var.api_function_url, "https://", ""), "/", "")
     origin_id   = "LambdaOrigin"
-
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -197,18 +195,36 @@ resource "aws_cloudfront_distribution" "api" {
     }
   }
 
+  origin {
+    domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
+    origin_id                = "S3Origin"
+    origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
+  }
+
+  ordered_cache_behavior {
+    path_pattern     = "/worlds/*/nodes/*/choose/*"
+    target_origin_id = "LambdaOrigin"
+
+    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods  = ["GET", "HEAD"]
+
+    # ENFORCE THE SIGNED COOKIES HERE
+    trusted_key_groups = [aws_cloudfront_key_group.main.id]
+
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHost
+    viewer_protocol_policy   = "redirect-to-https"
+  }
+
   default_cache_behavior {
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "LambdaOrigin"
+    target_origin_id = "S3Origin" # Sends garbage traffic to S3 (403/404)
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
     viewer_protocol_policy = "redirect-to-https"
-
-    # 1. Disable Caching
-    cache_policy_id    = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    trusted_key_groups = [aws_cloudfront_key_group.main.id]     # Prevents unauthorized access to the API
-
-    # 2. Forward Origin headers (Critical for Lambda URL)
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
   }
 
   viewer_certificate {
