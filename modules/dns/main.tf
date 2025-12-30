@@ -35,7 +35,7 @@ resource "cloudflare_record" "frontend" {
 
 # DNS records for ACM certificate validation
 resource "cloudflare_record" "cert_validation" {
-  for_each = var.acm_validation_records
+  for_each = merge(var.acm_validation_records, var.api_acm_validation_records)
 
   zone_id = data.cloudflare_zone.domain.id
   name    = each.value.name
@@ -48,6 +48,15 @@ resource "cloudflare_record" "cert_validation" {
 resource "cloudflare_record" "api" {
   zone_id = data.cloudflare_zone.domain.id
   name    = var.api_record_name
+  content = var.api_gateway_domain_name
+  type    = "CNAME"
+  proxied = false
+  ttl     = 1
+}
+
+resource "cloudflare_record" "streaming" {
+  zone_id = data.cloudflare_zone.domain.id
+  name    = var.streaming_record_name
   content = var.api_cloudfront_domain_name
   type    = "CNAME"
   proxied = false

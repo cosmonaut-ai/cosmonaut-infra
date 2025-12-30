@@ -62,6 +62,7 @@ module "compute" {
   gemini_key_name              = module.secrets.gemini_key_name
   google_client_secret_name    = module.secrets.google_client_secret_name
   cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
+  domain_name                  = "api.dev.cosmonaut-ai.com"
 }
 
 module "frontend" {
@@ -79,7 +80,10 @@ module "dns" {
   cloudfront_domain_name     = module.frontend.cloudfront_domain_name
   acm_validation_records     = module.frontend.acm_validation_records
   api_cloudfront_domain_name = module.frontend.api_cloudfront_domain_name
+  api_gateway_domain_name    = module.compute.api_gateway_domain_name
+  api_acm_validation_records = module.compute.api_acm_validation_records
   api_record_name            = "api.dev"
+  streaming_record_name      = "streaming.dev"
 }
 
 module "cicd" {

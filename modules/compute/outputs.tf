@@ -26,3 +26,19 @@ output "api_function_url" {
   description = "The Function URL endpoint for the API Lambda (Used for streaming responses)"
   value       = aws_lambda_function_url.api.function_url
 }
+
+output "api_gateway_domain_name" {
+  description = "The regional domain name for the API Gateway"
+  value       = aws_apigatewayv2_domain_name.api.domain_name_configuration[0].target_domain_name
+}
+
+output "api_acm_validation_records" {
+  description = "ACM certificate validation records for the API Gateway"
+  value = {
+    for dvo in aws_acm_certificate.api.domain_validation_options : dvo.domain_name => {
+      name  = dvo.resource_record_name
+      value = dvo.resource_record_value
+      type  = dvo.resource_record_type
+    }
+  }
+}

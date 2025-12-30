@@ -78,3 +78,8 @@ variable "cloudfront_private_key_name" {
   description = "Name of the CloudFront private key"
   type        = string
 }
+
+variable "domain_name" {
+  description = "The domain name for the API (e.g., api.cosmonaut-ai.com)"
+  type        = string
+}

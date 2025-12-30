@@ -25,10 +25,31 @@ variable "acm_validation_records" {
 }
 
 variable "api_cloudfront_domain_name" {
-  type = string
+  type        = string
+  description = "The CloudFront distribution domain name for streaming API"
+}
+
+variable "api_gateway_domain_name" {
+  type        = string
+  description = "The API Gateway regional domain name"
 }
 
 variable "api_record_name" {
-  description = "Subdomain for the API (e.g., 'api' or 'api-dev')"
+  description = "Subdomain for the API (e.g., 'api' or 'api.dev')"
   type        = string
+}
+
+variable "streaming_record_name" {
+  description = "Subdomain for the streaming API (e.g., 'streaming' or 'streaming.dev')"
+  type        = string
+}
+
+variable "api_acm_validation_records" {
+  description = "Map of ACM certificate validation records for the API"
+  type = map(object({
+    name  = string
+    value = string
+    type  = string
+  }))
+  default = {}
 }

@@ -180,12 +180,7 @@ resource "aws_wafv2_web_acl" "api_protection" {
 
 resource "aws_cloudfront_distribution" "api" {
   enabled = true
-  # We will use the wildcard cert, so we need an alias.
-  # Note: The actual alias is passed in via variable or derived. 
-  # For simplicity, we assume api.domain or api-dev.domain based on the cert.
-  # To avoid circular dependency logic, we usually pass the desired 'api_domain_name' as a var, 
-  # but here we can derive it if you stick to a standard pattern:
-  aliases = ["api.${var.domain_name}"]
+  aliases = ["streaming.${var.domain_name}"]
 
   web_acl_id = var.existing_waf_arn != null ? var.existing_waf_arn : aws_wafv2_web_acl.api_protection[0].arn
 
