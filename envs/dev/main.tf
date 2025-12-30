@@ -62,6 +62,7 @@ module "frontend" {
   env              = "dev"
   domain_name      = "dev.cosmonaut-ai.com"
   api_function_url = module.compute.api_function_url
+  existing_waf_arn = "arn:aws:wafv2:us-east-1:467508858251:global/webacl/cosmonaut-api-waf/9c542e15-ff8a-4c7b-90fa-1f202d52e139"
 }
 
 module "dns" {
@@ -71,7 +72,7 @@ module "dns" {
   cloudfront_domain_name     = module.frontend.cloudfront_domain_name
   acm_validation_records     = module.frontend.acm_validation_records
   api_cloudfront_domain_name = module.frontend.api_cloudfront_domain_name
-  api_record_name            = "api"
+  api_record_name            = "api.dev"
 }
 
 module "cicd" {

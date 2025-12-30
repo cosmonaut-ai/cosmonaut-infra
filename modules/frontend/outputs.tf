@@ -21,11 +21,15 @@ output "acm_certificate_arn" {
 output "acm_validation_records" {
   description = "ACM certificate validation records for DNS configuration"
   value = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
-      name  = dvo.resource_record_name
-      value = dvo.resource_record_value
-      type  = dvo.resource_record_type
-    }
+    # Deduplicate validation records by converting to a set first
+    # When a cert has both root and wildcard, AWS often uses the same validation record
+    for dvo in distinct([
+      for d in aws_acm_certificate.cert.domain_validation_options : {
+        name  = d.resource_record_name
+        value = d.resource_record_value
+        type  = d.resource_record_type
+      }
+    ]) : dvo.name => dvo
   }
 }
 
