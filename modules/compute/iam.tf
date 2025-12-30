@@ -127,6 +127,7 @@ resource "aws_iam_policy" "lambda_extra" {
       },
       {
         Action = [
+          "sqs:SendMessage",
           "sqs:ReceiveMessage",
           "sqs:DeleteMessage",
           "sqs:GetQueueAttributes",
