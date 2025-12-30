@@ -29,3 +29,11 @@ output "acm_validation_records" {
   }
 }
 
+output "api_cloudfront_domain_name" {
+  value = aws_cloudfront_distribution.api.domain_name
+}
+
+output "waf_arn" {
+  description = "The ARN of the WAF being used"
+  value       = var.existing_waf_arn != null ? var.existing_waf_arn : aws_wafv2_web_acl.api_protection[0].arn
+}

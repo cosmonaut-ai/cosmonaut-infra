@@ -22,3 +22,7 @@ output "slow_queue_arn" {
   value = aws_sqs_queue.slow.arn
 }
 
+output "api_function_url" {
+  description = "The Function URL endpoint for the API Lambda (Used for streaming responses)"
+  value       = aws_lambda_function_url.api.function_url
+}

@@ -82,10 +82,16 @@ resource "aws_lambda_function" "worker_fast" {
 
   environment {
     variables = {
-      # Worker needs access to DB and Config, but maybe not queues (unless chaining)
-      DYNAMODB_TABLE_NAME = var.dynamodb_table_arn
-      ENV                 = var.env
-      PINECONE_INDEX      = var.pinecone_index_name
+      # The API needs to know where to send messages!
+      FAST_WORKER_QUEUE_URL       = aws_sqs_queue.fast.id
+      SLOW_WORKER_QUEUE_URL       = aws_sqs_queue.slow.id
+      DYNAMODB_TABLE_NAME         = var.dynamodb_table_arn # Extract name from ARN if needed
+      ENV                         = var.env
+      PINECONE_INDEX              = var.pinecone_index_name
+      COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
+      COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
+      CORS_ALLOWED_ORIGINS        = join(",", var.cors_allowed_origins)
+      MOCK_AUTH                   = var.mock_auth
     }
   }
 
@@ -116,9 +122,31 @@ resource "aws_lambda_function" "worker_slow" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME = var.dynamodb_table_arn
-      ENV                 = var.env
-      PINECONE_INDEX      = var.pinecone_index_name
+      # The API needs to know where to send messages!
+      FAST_WORKER_QUEUE_URL       = aws_sqs_queue.fast.id
+      SLOW_WORKER_QUEUE_URL       = aws_sqs_queue.slow.id
+      DYNAMODB_TABLE_NAME         = var.dynamodb_table_arn # Extract name from ARN if needed
+      ENV                         = var.env
+      PINECONE_INDEX              = var.pinecone_index_name
+      COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
+      COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
+      CORS_ALLOWED_ORIGINS        = join(",", var.cors_allowed_origins)
+      MOCK_AUTH                   = var.mock_auth
     }
+  }
+}
+
+# Create a public URL for the API Lambda (Required for CloudFront)
+resource "aws_lambda_function_url" "api" {
+  function_name      = aws_lambda_function.api.function_name
+  authorization_type = "NONE" # Auth handled by FastAPI + WAF
+  invoke_mode        = "RESPONSE_STREAM"
+
+  cors {
+    allow_origins  = ["*"]
+    allow_methods  = ["*"]
+    allow_headers  = ["content-type", "authorization"]
+    expose_headers = ["content-type"]
+    max_age        = 300
   }
 }

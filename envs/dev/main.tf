@@ -58,17 +58,20 @@ module "compute" {
 }
 
 module "frontend" {
-  source      = "../../modules/frontend"
-  env         = "dev"
-  domain_name = "dev.cosmonaut-ai.com"
+  source           = "../../modules/frontend"
+  env              = "dev"
+  domain_name      = "dev.cosmonaut-ai.com"
+  api_function_url = module.compute.api_function_url
 }
 
 module "dns" {
-  source                 = "../../modules/dns"
-  domain_name            = "cosmonaut-ai.com"
-  record_name            = "dev"
-  cloudfront_domain_name = module.frontend.cloudfront_domain_name
-  acm_validation_records = module.frontend.acm_validation_records
+  source                     = "../../modules/dns"
+  domain_name                = "cosmonaut-ai.com"
+  record_name                = "dev"
+  cloudfront_domain_name     = module.frontend.cloudfront_domain_name
+  acm_validation_records     = module.frontend.acm_validation_records
+  api_cloudfront_domain_name = module.frontend.api_cloudfront_domain_name
+  api_record_name            = "api"
 }
 
 module "cicd" {

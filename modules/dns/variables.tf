@@ -24,3 +24,11 @@ variable "acm_validation_records" {
   default = {}
 }
 
+variable "api_cloudfront_domain_name" {
+  type = string
+}
+
+variable "api_record_name" {
+  description = "Subdomain for the API (e.g., 'api' or 'api-dev')"
+  type        = string
+}

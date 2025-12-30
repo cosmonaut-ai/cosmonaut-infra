@@ -45,3 +45,11 @@ resource "cloudflare_record" "cert_validation" {
   proxied = false
 }
 
+resource "cloudflare_record" "api" {
+  zone_id = data.cloudflare_zone.domain.id
+  name    = var.api_record_name
+  content = var.api_cloudfront_domain_name
+  type    = "CNAME"
+  proxied = false
+  ttl     = 1
+}
