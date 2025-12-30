@@ -25,3 +25,11 @@ resource "aws_ssm_parameter" "google_client_secret" {
   }
 }
 
+resource "aws_ssm_parameter" "cloudfront_private_key" {
+  name  = "/${var.env}/cosmonaut/cloudfront_private_key"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

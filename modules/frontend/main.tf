@@ -209,7 +209,8 @@ resource "aws_cloudfront_distribution" "api" {
     viewer_protocol_policy = "redirect-to-https"
 
     # 1. Disable Caching
-    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    cache_policy_id    = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    trusted_key_groups = [aws_cloudfront_key_group.main.id]     # Prevents unauthorized access to the API
 
     # 2. Forward Origin headers (Critical for Lambda URL)
     origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
@@ -226,4 +227,18 @@ resource "aws_cloudfront_distribution" "api" {
       restriction_type = "none"
     }
   }
+}
+
+# 1. Upload the Public Key to CloudFront
+resource "aws_cloudfront_public_key" "main" {
+  comment     = "Public key for signing cookies (${var.env})"
+  encoded_key = file("${path.module}/public_key.pem")
+  name        = "cosmonaut-${var.env}-key"
+}
+
+# 2. Create a Key Group (A list of keys that are allowed to sign)
+resource "aws_cloudfront_key_group" "main" {
+  comment = "Key group for API access"
+  items   = [aws_cloudfront_public_key.main.id]
+  name    = "cosmonaut-${var.env}-key-group"
 }

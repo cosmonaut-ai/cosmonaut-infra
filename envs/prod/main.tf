@@ -71,7 +71,7 @@ module "dns" {
   cloudfront_domain_name     = module.frontend.cloudfront_domain_name
   acm_validation_records     = module.frontend.acm_validation_records
   api_cloudfront_domain_name = module.frontend.api_cloudfront_domain_name
-  api_record_name            = "api`"
+  api_record_name            = "api"
 }
 
 module "cicd" {

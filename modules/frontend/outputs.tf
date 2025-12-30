@@ -41,3 +41,7 @@ output "waf_arn" {
   description = "The ARN of the WAF being used"
   value       = var.existing_waf_arn != null ? var.existing_waf_arn : aws_wafv2_web_acl.api_protection[0].arn
 }
+
+output "cloudfront_key_pair_id" {
+  value = aws_cloudfront_public_key.main.id
+}
