@@ -1,3 +1,36 @@
+# Define common environment variables for all Lambda functions
+locals {
+  lambda_env_vars = {
+    # Queue URLs
+    FAST_WORKER_QUEUE_URL = aws_sqs_queue.fast.id
+    SLOW_WORKER_QUEUE_URL = aws_sqs_queue.slow.id
+
+    # Database and storage
+    DYNAMODB_TABLE_NAME = var.dynamodb_table_arn
+    PINECONE_INDEX      = var.pinecone_index_name
+
+    # Authentication
+    COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
+    MOCK_AUTH                   = var.mock_auth
+
+    # CloudFront
+    CLOUDFRONT_KEY_PAIR_ID = var.cloudfront_key_pair_id
+
+    # CORS
+    CORS_ALLOWED_ORIGINS = join(",", var.cors_allowed_origins)
+
+    # Environment
+    ENV = var.env
+
+    # SSM Parameter paths (for runtime secret fetching)
+    PINECONE_API_KEY_PARAM       = var.pinecone_key_name
+    GEMINI_API_KEY_PARAM         = var.gemini_key_name
+    GOOGLE_CLIENT_SECRET_PARAM   = var.google_client_secret_name
+    CLOUDFRONT_PRIVATE_KEY_PARAM = var.cloudfront_private_key_name
+  }
+}
+
 # SQS queues for async processing
 resource "aws_sqs_queue" "fast" {
   name                       = "cosmonaut-${var.env}-fast"
@@ -32,6 +65,7 @@ resource "aws_lambda_event_source_mapping" "slow_queue" {
   function_response_types = ["ReportBatchItemFailures"]
 }
 
+
 # 1. API Lambda (The Entrypoint)
 resource "aws_lambda_function" "api" {
   function_name = "cosmonaut-${var.env}-api"
@@ -47,23 +81,7 @@ resource "aws_lambda_function" "api" {
   }
 
   environment {
-    variables = {
-      # The API needs to know where to send messages!
-      FAST_WORKER_QUEUE_URL       = aws_sqs_queue.fast.id
-      SLOW_WORKER_QUEUE_URL       = aws_sqs_queue.slow.id
-      DYNAMODB_TABLE_NAME         = var.dynamodb_table_arn # Extract name from ARN if needed
-      ENV                         = var.env
-      PINECONE_INDEX              = var.pinecone_index_name
-      COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
-      COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
-      CORS_ALLOWED_ORIGINS        = join(",", var.cors_allowed_origins)
-      MOCK_AUTH                   = var.mock_auth
-
-      PINECONE_API_KEY_PARAM       = "/${var.env}/cosmonaut/pinecone_api_key"
-      GEMINI_API_KEY_PARAM         = "/${var.env}/cosmonaut/gemini_api_key"
-      GOOGLE_CLIENT_SECRET_PARAM   = "/${var.env}/cosmonaut/google_client_secret"
-      CLOUDFRONT_PRIVATE_KEY_PARAM = "/${var.env}/cosmonaut/cloudfront_private_key"
-    }
+    variables = local.lambda_env_vars
   }
 
   lifecycle {
@@ -86,23 +104,7 @@ resource "aws_lambda_function" "worker_fast" {
   }
 
   environment {
-    variables = {
-      # The API needs to know where to send messages!
-      FAST_WORKER_QUEUE_URL       = aws_sqs_queue.fast.id
-      SLOW_WORKER_QUEUE_URL       = aws_sqs_queue.slow.id
-      DYNAMODB_TABLE_NAME         = var.dynamodb_table_arn # Extract name from ARN if needed
-      ENV                         = var.env
-      PINECONE_INDEX              = var.pinecone_index_name
-      COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
-      COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
-      CORS_ALLOWED_ORIGINS        = join(",", var.cors_allowed_origins)
-      MOCK_AUTH                   = var.mock_auth
-
-      PINECONE_API_KEY_PARAM       = "/${var.env}/cosmonaut/pinecone_api_key"
-      GEMINI_API_KEY_PARAM         = "/${var.env}/cosmonaut/gemini_api_key"
-      GOOGLE_CLIENT_SECRET_PARAM   = "/${var.env}/cosmonaut/google_client_secret"
-      CLOUDFRONT_PRIVATE_KEY_PARAM = "/${var.env}/cosmonaut/cloudfront_private_key"
-    }
+    variables = local.lambda_env_vars
   }
 
   lifecycle {
@@ -131,23 +133,7 @@ resource "aws_lambda_function" "worker_slow" {
   # Throttling is handled by the Event Source Mapping you already added!
 
   environment {
-    variables = {
-      # The API needs to know where to send messages!
-      FAST_WORKER_QUEUE_URL       = aws_sqs_queue.fast.id
-      SLOW_WORKER_QUEUE_URL       = aws_sqs_queue.slow.id
-      DYNAMODB_TABLE_NAME         = var.dynamodb_table_arn # Extract name from ARN if needed
-      ENV                         = var.env
-      PINECONE_INDEX              = var.pinecone_index_name
-      COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
-      COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
-      CORS_ALLOWED_ORIGINS        = join(",", var.cors_allowed_origins)
-      MOCK_AUTH                   = var.mock_auth
-
-      PINECONE_API_KEY_PARAM       = "/${var.env}/cosmonaut/pinecone_api_key"
-      GEMINI_API_KEY_PARAM         = "/${var.env}/cosmonaut/gemini_api_key"
-      GOOGLE_CLIENT_SECRET_PARAM   = "/${var.env}/cosmonaut/google_client_secret"
-      CLOUDFRONT_PRIVATE_KEY_PARAM = "/${var.env}/cosmonaut/cloudfront_private_key"
-    }
+    variables = local.lambda_env_vars
   }
 }
 

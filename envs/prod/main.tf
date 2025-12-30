@@ -45,7 +45,9 @@ module "compute" {
   dynamodb_table_arn = module.persistence.table_arn
   ssm_parameter_arns = [
     module.secrets.pinecone_key_arn,
-    module.secrets.gemini_key_arn
+    module.secrets.gemini_key_arn,
+    module.secrets.cloudfront_private_key_arn,
+    module.secrets.google_client_secret_arn
   ]
   api_lambda_image_uri         = var.api_lambda_image_uri
   slow_worker_lambda_image_uri = var.slow_worker_lambda_image_uri
@@ -55,6 +57,11 @@ module "compute" {
   cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
   cors_allowed_origins         = ["https://cosmonaut-ai.com"]
   mock_auth                    = false
+  cloudfront_key_pair_id       = module.frontend.cloudfront_key_pair_id
+  pinecone_key_name            = module.secrets.pinecone_key_name
+  gemini_key_name              = module.secrets.gemini_key_name
+  google_client_secret_name    = module.secrets.google_client_secret_name
+  cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
 }
 
 module "frontend" {

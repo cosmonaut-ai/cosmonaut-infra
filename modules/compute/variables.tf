@@ -53,3 +53,28 @@ variable "mock_auth" {
   type        = bool
   default     = false
 }
+
+variable "cloudfront_key_pair_id" {
+  description = "ID of the CloudFront key pair"
+  type        = string
+}
+
+variable "pinecone_key_name" {
+  description = "Name of the Pinecone key"
+  type        = string
+}
+
+variable "gemini_key_name" {
+  description = "Name of the Gemini key"
+  type        = string
+}
+
+variable "google_client_secret_name" {
+  description = "Name of the Google client secret"
+  type        = string
+}
+
+variable "cloudfront_private_key_name" {
+  description = "Name of the CloudFront private key"
+  type        = string
+}
