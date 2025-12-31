@@ -3,7 +3,7 @@ variable "env" {
   type        = string
 }
 
-variable "github_repo" {
-  description = "The GitHub repository in 'owner/repo' format"
-  type        = string
+variable "github_repos" {
+  description = "The list of GitHub repositories in 'owner/repo' format"
+  type        = list(string)
 }

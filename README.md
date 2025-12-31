@@ -79,7 +79,7 @@ If you see the error "Credentials could not be loaded, please check your action 
 - Ensure `AWS_ROLE_ARN` is set in GitHub repository secrets
 - Verify the OIDC provider exists in AWS (see step 1 above)
 - Check that the IAM role exists and has the correct trust policy
-- Ensure the GitHub repository name matches the `github_repo` variable in your Terraform configuration
+- Ensure the GitHub repository name matches one of the entries in the `github_repos` list variable in your Terraform configuration
 
 ## Architecture
 

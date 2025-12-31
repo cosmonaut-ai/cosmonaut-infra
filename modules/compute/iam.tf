@@ -3,6 +3,14 @@ data "aws_region" "current" {}
 resource "aws_apigatewayv2_api" "main" {
   name          = "cosmonaut-${var.env}-api"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins  = var.cors_allowed_origins
+    allow_methods  = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    allow_headers  = ["content-type", "authorization"]
+    expose_headers = ["content-type"]
+    max_age        = 300
+  }
 }
 
 resource "aws_apigatewayv2_authorizer" "cognito" {
@@ -39,12 +47,24 @@ resource "aws_apigatewayv2_route" "proxy" {
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
+resource "aws_apigatewayv2_route" "proxy_options" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "OPTIONS /{proxy+}"
+  authorization_type = "NONE"
+}
+
 resource "aws_apigatewayv2_route" "root" {
   api_id             = aws_apigatewayv2_api.main.id
   route_key          = "ANY /"
   target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "root_options" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "OPTIONS /"
+  authorization_type = "NONE"
 }
 
 resource "aws_lambda_permission" "api_gw" {

@@ -13,6 +13,10 @@ terraform {
   }
 }
 
+locals {
+  cors_allowed_origins = ["https://cosmonaut-ai.com"]
+}
+
 provider "aws" {
   region = "us-east-2"
 }
@@ -55,7 +59,7 @@ module "compute" {
   pinecone_index_name          = var.pinecone_index_name
   cognito_user_pool_id         = module.identity.cognito_user_pool_id
   cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
-  cors_allowed_origins         = ["https://cosmonaut-ai.com"]
+  cors_allowed_origins         = local.cors_allowed_origins
   mock_auth                    = false
   cloudfront_key_pair_id       = module.frontend.cloudfront_key_pair_id
   pinecone_key_name            = module.secrets.pinecone_key_name
@@ -86,9 +90,9 @@ module "dns" {
 }
 
 module "cicd" {
-  source      = "../../modules/cicd"
-  github_repo = "cosmonaut-ai/cosmonaut-api"
-  env         = "prod"
+  source       = "../../modules/cicd"
+  github_repos = ["cosmonaut-ai/cosmonaut-api", "cosmonaut-ai/cosmonaut-web"]
+  env          = "prod"
 }
 
 variable "google_client_id" {
