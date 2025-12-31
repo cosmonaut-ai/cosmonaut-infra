@@ -70,10 +70,11 @@ module "compute" {
 }
 
 module "frontend" {
-  source           = "../../modules/frontend"
-  env              = "prod"
-  domain_name      = "cosmonaut-ai.com"
-  api_function_url = module.compute.api_function_url
+  source               = "../../modules/frontend"
+  env                  = "prod"
+  domain_name          = "cosmonaut-ai.com"
+  api_function_url     = module.compute.api_function_url
+  cors_allowed_origins = local.cors_allowed_origins
 }
 
 module "dns" {

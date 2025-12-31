@@ -134,9 +134,20 @@ resource "aws_iam_policy" "lambda_extra" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:Scan"]
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:ConditionCheckItem",
+          "dynamodb:DescribeTable"
+        ]
         Effect   = "Allow"
-        Resource = var.dynamodb_table_arn
+        Resource = [var.dynamodb_table_arn, "${var.dynamodb_table_arn}/index/*"]
       },
       {
         Action   = ["ssm:GetParameter", "ssm:GetParameters"]

@@ -70,11 +70,12 @@ module "compute" {
 }
 
 module "frontend" {
-  source           = "../../modules/frontend"
-  env              = "dev"
-  domain_name      = "dev.cosmonaut-ai.com"
-  api_function_url = module.compute.api_function_url
-  existing_waf_arn = "arn:aws:wafv2:us-east-1:467508858251:global/webacl/cosmonaut-api-waf/9c542e15-ff8a-4c7b-90fa-1f202d52e139"
+  source               = "../../modules/frontend"
+  env                  = "dev"
+  domain_name          = "dev.cosmonaut-ai.com"
+  api_function_url     = module.compute.api_function_url
+  cors_allowed_origins = local.cors_allowed_origins
+  existing_waf_arn     = "arn:aws:wafv2:us-east-1:467508858251:global/webacl/cosmonaut-api-waf/9c542e15-ff8a-4c7b-90fa-1f202d52e139"
 }
 
 module "dns" {

@@ -10,15 +10,15 @@ locals {
     PINECONE_INDEX      = var.pinecone_index_name
 
     # Authentication
-    COGNITO_USER_POOL_ID        = var.cognito_user_pool_id
-    COGNITO_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id
-    MOCK_AUTH                   = var.mock_auth
+    COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+    COGNITO_CLIENT_ID    = var.cognito_user_pool_client_id
+    MOCK_AUTH            = var.mock_auth
 
     # CloudFront
     CLOUDFRONT_KEY_PAIR_ID = var.cloudfront_key_pair_id
 
     # CORS
-    CORS_ALLOWED_ORIGINS = join(",", var.cors_allowed_origins)
+    CORS_ORIGINS = jsonencode(var.cors_allowed_origins)
 
     # Environment
     ENV = var.env

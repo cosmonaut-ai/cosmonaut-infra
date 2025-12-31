@@ -178,6 +178,59 @@ resource "aws_wafv2_web_acl" "api_protection" {
   }
 }
 
+resource "aws_cloudfront_function" "cors_preflight" {
+  name    = "cosmonaut-${var.env}-cors-preflight"
+  runtime = "cloudfront-js-1.0"
+  comment = "Handle CORS preflight OPTIONS requests"
+  publish = true
+  code    = <<EOF
+function handler(event) {
+    var request = event.request;
+    var headers = request.headers;
+    var origin = headers.origin ? headers.origin.value : '';
+
+    if (request.method === 'OPTIONS') {
+        var response = {
+            statusCode: 204,
+            statusDescription: 'No Content',
+            headers: {
+                'access-control-allow-origin': { value: origin },
+                'access-control-allow-methods': { value: 'GET, POST, PUT, DELETE, PATCH, OPTIONS' },
+                'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token' },
+                'access-control-allow-credentials': { value: 'true' },
+                'access-control-max-age': { value: '300' }
+            }
+        };
+        return response;
+    }
+    return request;
+}
+EOF
+}
+
+resource "aws_cloudfront_response_headers_policy" "api_cors" {
+  name    = "cosmonaut-${var.env}-api-cors"
+  comment = "CORS policy for API streaming"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"]
+    }
+
+    access_control_allow_origins {
+      items = var.cors_allowed_origins
+    }
+
+    origin_override = true
+  }
+}
+
 resource "aws_cloudfront_distribution" "api" {
   enabled = true
   aliases = ["streaming.${var.domain_name}"]
@@ -211,9 +264,15 @@ resource "aws_cloudfront_distribution" "api" {
     # ENFORCE THE SIGNED COOKIES HERE
     trusted_key_groups = [aws_cloudfront_key_group.main.id]
 
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHost
-    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id   = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHost
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.api_cors.id
+    viewer_protocol_policy     = "redirect-to-https"
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.cors_preflight.arn
+    }
   }
 
   default_cache_behavior {

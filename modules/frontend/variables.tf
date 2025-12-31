@@ -12,3 +12,8 @@ variable "api_function_url" {
   description = "The Function URL endpoint for the API Lambda (Used for streaming responses)"
   type        = string
 }
+
+variable "cors_allowed_origins" {
+  description = "List of allowed origins for CORS"
+  type        = list(string)
+}
