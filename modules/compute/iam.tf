@@ -1,5 +1,10 @@
 data "aws_region" "current" {}
 
+locals {
+  # These methods require authentication
+  auth_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+}
+
 resource "aws_apigatewayv2_api" "main" {
   name          = "cosmonaut-${var.env}-api"
   protocol_type = "HTTP"
@@ -39,32 +44,25 @@ resource "aws_apigatewayv2_integration" "lambda" {
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_route" "proxy" {
+# Create authenticated routes for all methods except OPTIONS
+resource "aws_apigatewayv2_route" "authenticated_proxy" {
+  for_each = toset(local.auth_methods)
+
   api_id             = aws_apigatewayv2_api.main.id
-  route_key          = "ANY /{proxy+}"
+  route_key          = "${each.value} /{proxy+}"
   target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
-resource "aws_apigatewayv2_route" "proxy_options" {
-  api_id             = aws_apigatewayv2_api.main.id
-  route_key          = "OPTIONS /{proxy+}"
-  authorization_type = "NONE"
-}
+resource "aws_apigatewayv2_route" "authenticated_root" {
+  for_each = toset(local.auth_methods)
 
-resource "aws_apigatewayv2_route" "root" {
   api_id             = aws_apigatewayv2_api.main.id
-  route_key          = "ANY /"
+  route_key          = "${each.value} /"
   target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
-}
-
-resource "aws_apigatewayv2_route" "root_options" {
-  api_id             = aws_apigatewayv2_api.main.id
-  route_key          = "OPTIONS /"
-  authorization_type = "NONE"
 }
 
 resource "aws_lambda_permission" "api_gw" {
