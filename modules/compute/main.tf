@@ -73,7 +73,6 @@ resource "aws_lambda_function" "api" {
   role          = aws_iam_role.lambda_exec.arn
   timeout       = 29 # API Gateway Limit
   memory_size   = var.api_memory_size
-
   package_type  = "Image"
   architectures = [var.lambda_architecture]
 
@@ -144,11 +143,33 @@ resource "aws_lambda_function" "worker_slow" {
   }
 }
 
-# Create a public URL for the API Lambda (Required for CloudFront)
+# 4. Streaming API Lambda (The Streaming Entrypoint)
+resource "aws_lambda_function" "api_streaming" {
+  function_name = "cosmonaut-${var.env}-api-streaming"
+  image_uri     = var.api_lambda_image_uri
+  role          = aws_iam_role.lambda_exec.arn
+  timeout       = 300
+  memory_size   = var.api_memory_size
+  package_type  = "Image"
+  architectures = [var.lambda_architecture]
+
+  image_config {
+    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+  }
+
+  environment {
+    variables = merge(local.lambda_env_vars, {
+      AWS_LWA_INVOKE_MODE = "RESPONSE_STREAM"
+    })
+  }
+}
+
+# Create a public URL for the Streaming API Lambda (Required for CloudFront)
 resource "aws_lambda_function_url" "api" {
-  function_name      = aws_lambda_function.api.function_name
+  function_name      = aws_lambda_function.api_streaming.function_name
   authorization_type = "NONE" # Auth handled by FastAPI + WAF
   invoke_mode        = "RESPONSE_STREAM"
+
 
   cors {
     allow_origins  = var.cors_allowed_origins

@@ -53,9 +53,9 @@ module "compute" {
     module.secrets.cloudfront_private_key_arn,
     module.secrets.google_client_secret_arn
   ]
-  api_lambda_image_uri         = var.api_lambda_image_uri
-  slow_worker_lambda_image_uri = var.slow_worker_lambda_image_uri
-  fast_worker_lambda_image_uri = var.fast_worker_lambda_image_uri
+  api_lambda_image_uri         = var.lambda_uri
+  slow_worker_lambda_image_uri = var.lambda_uri
+  fast_worker_lambda_image_uri = var.lambda_uri
   pinecone_index_name          = var.pinecone_index_name
   cognito_user_pool_id         = module.identity.cognito_user_pool_id
   cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
@@ -108,19 +108,9 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
-variable "api_lambda_image_uri" {
+variable "lambda_uri" {
   type        = string
-  description = "Image URI of the API Lambda function"
-}
-
-variable "slow_worker_lambda_image_uri" {
-  type        = string
-  description = "Image URI of the slow worker Lambda function"
-}
-
-variable "fast_worker_lambda_image_uri" {
-  type        = string
-  description = "Image URI of the fast worker Lambda function"
+  description = "Image URI of the Lambda functions"
 }
 
 variable "pinecone_index_name" {
