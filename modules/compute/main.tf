@@ -77,7 +77,8 @@ resource "aws_lambda_function" "api" {
   architectures = [var.lambda_architecture]
 
   image_config {
-    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+    entry_point = ["/bin/sh", "-c"]
+    command     = ["python -m uvicorn app.main:app --host 0.0.0.0 --port 8080"]
   }
 
   environment {
@@ -154,7 +155,8 @@ resource "aws_lambda_function" "api_streaming" {
   architectures = [var.lambda_architecture]
 
   image_config {
-    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+    entry_point = ["/bin/sh", "-c"]
+    command     = ["python -m uvicorn app.main:app --host 0.0.0.0 --port 8080"]
   }
 
   environment {
