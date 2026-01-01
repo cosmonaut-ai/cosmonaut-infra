@@ -10,11 +10,12 @@ resource "aws_apigatewayv2_api" "main" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins  = var.cors_allowed_origins
-    allow_methods  = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-    allow_headers  = ["content-type", "authorization"]
-    expose_headers = ["content-type"]
-    max_age        = 300
+    allow_origins     = var.cors_allowed_origins
+    allow_methods     = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    allow_headers     = ["content-type", "authorization"]
+    expose_headers    = ["content-type"]
+    allow_credentials = true
+    max_age           = 300
   }
 }
 
@@ -150,7 +151,7 @@ resource "aws_iam_policy" "lambda_extra" {
         Resource = [var.dynamodb_table_arn, "${var.dynamodb_table_arn}/index/*"]
       },
       {
-        Action   = ["ssm:GetParameter", "ssm:GetParameters"]
+        Action   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
         Effect   = "Allow"
         Resource = var.ssm_parameter_arns
       },

@@ -72,12 +72,13 @@ resource "aws_lambda_function" "api" {
   image_uri     = var.api_lambda_image_uri
   role          = aws_iam_role.lambda_exec.arn
   timeout       = 29 # API Gateway Limit
-  memory_size   = 1024
+  memory_size   = var.api_memory_size
 
-  package_type = "Image"
+  package_type  = "Image"
+  architectures = [var.lambda_architecture]
 
   image_config {
-    command = ["app.main.handler"] # <--- API Entrypoint
+    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
   }
 
   environment {
@@ -95,16 +96,19 @@ resource "aws_lambda_function" "worker_fast" {
   image_uri     = var.fast_worker_lambda_image_uri
   role          = aws_iam_role.lambda_exec.arn
   timeout       = 30 # Fail fast if text gen hangs
-  memory_size   = 1024
+  memory_size   = var.worker_fast_memory_size
 
-  package_type = "Image"
+  package_type  = "Image"
+  architectures = [var.lambda_architecture]
 
   image_config {
     command = ["app.worker.handler"] # <--- Worker Entrypoint
   }
 
   environment {
-    variables = local.lambda_env_vars
+    variables = merge(local.lambda_env_vars, {
+      AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
+    })
   }
 
   lifecycle {
@@ -120,7 +124,8 @@ resource "aws_lambda_function" "worker_slow" {
   timeout       = 900  # Allow 15 mins for heavy tasks
   memory_size   = 2048 # Give it more RAM
 
-  package_type = "Image"
+  package_type  = "Image"
+  architectures = [var.lambda_architecture]
 
   image_config {
     command = ["app.worker.handler"] # <--- Same Entrypoint as Fast Worker
@@ -133,7 +138,9 @@ resource "aws_lambda_function" "worker_slow" {
   # Throttling is handled by the Event Source Mapping you already added!
 
   environment {
-    variables = local.lambda_env_vars
+    variables = merge(local.lambda_env_vars, {
+      AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
+    })
   }
 }
 

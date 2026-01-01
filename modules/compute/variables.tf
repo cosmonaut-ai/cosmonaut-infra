@@ -83,3 +83,21 @@ variable "domain_name" {
   description = "The domain name for the API (e.g., api.cosmonaut-ai.com)"
   type        = string
 }
+
+variable "lambda_architecture" {
+  description = "Architecture for Lambda functions (x86_64 or arm64)"
+  type        = string
+  default     = "arm64"
+}
+
+variable "api_memory_size" {
+  description = "Memory size for the API Lambda function"
+  type        = number
+  default     = 1769
+}
+
+variable "worker_fast_memory_size" {
+  description = "Memory size for the fast worker Lambda function"
+  type        = number
+  default     = 1769
+}
