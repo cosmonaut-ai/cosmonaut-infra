@@ -77,8 +77,7 @@ resource "aws_lambda_function" "api" {
   architectures = [var.lambda_architecture]
 
   image_config {
-    entry_point = ["/bin/sh", "-c"]
-    command     = ["python -m uvicorn app.main:app --host 0.0.0.0 --port 8080"]
+    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
   }
 
   environment {
@@ -163,6 +162,10 @@ resource "aws_lambda_function" "api_streaming" {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "RESPONSE_STREAM"
     })
+  }
+
+  lifecycle {
+    ignore_changes = [image_uri]
   }
 }
 
