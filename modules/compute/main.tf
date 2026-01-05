@@ -17,6 +17,9 @@ locals {
     # CloudFront
     CLOUDFRONT_KEY_PAIR_ID = var.cloudfront_key_pair_id
 
+    # Google Cloud
+    GOOGLE_APPLICATION_CREDENTIALS = "/var/task/client-config.json"
+
     # CORS
     CORS_ORIGINS = jsonencode(var.cors_allowed_origins)
 
@@ -77,7 +80,8 @@ resource "aws_lambda_function" "api" {
   architectures = [var.lambda_architecture]
 
   image_config {
-    command = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+    entry_point = ["/bin/sh", "-c"]
+    command     = ["python -m uvicorn app.main:app --host 0.0.0.0 --port 8080"]
   }
 
   environment {
@@ -107,6 +111,7 @@ resource "aws_lambda_function" "worker_fast" {
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
+      GEMINI_TIMEOUT_S    = 900
     })
   }
 
@@ -139,6 +144,7 @@ resource "aws_lambda_function" "worker_slow" {
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
+      GEMINI_TIMEOUT_S    = 900
     })
   }
 }
@@ -161,6 +167,7 @@ resource "aws_lambda_function" "api_streaming" {
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "RESPONSE_STREAM"
+      GEMINI_TIMEOUT_S    = 900
     })
   }
 
