@@ -186,7 +186,7 @@ resource "aws_lambda_function_url" "api" {
   cors {
     allow_origins  = var.cors_allowed_origins
     allow_headers  = ["content-type", "authorization"]
-    expose_headers = ["content-type"]
+    expose_headers = ["content-type", "x-new-node-id"]
     max_age        = 300
   }
 }

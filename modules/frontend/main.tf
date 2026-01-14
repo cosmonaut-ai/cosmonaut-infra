@@ -196,7 +196,7 @@ function handler(event) {
             headers: {
                 'access-control-allow-origin': { value: origin },
                 'access-control-allow-methods': { value: 'GET, POST, PUT, DELETE, PATCH, OPTIONS' },
-                'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token' },
+                'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token'},
                 'access-control-allow-credentials': { value: 'true' },
                 'access-control-max-age': { value: '300' }
             }
@@ -227,6 +227,10 @@ resource "aws_cloudfront_response_headers_policy" "api_cors" {
       items = var.cors_allowed_origins
     }
 
+    access_control_expose_headers {
+      items = ["Content-Type", "X-New-Node-Id"]
+    }
+
     origin_override = true
   }
 }
@@ -255,7 +259,7 @@ resource "aws_cloudfront_distribution" "api" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/worlds/*/nodes/*/choose/*"
+    path_pattern     = "/worlds/*/nodes/*/choose*"
     target_origin_id = "LambdaOrigin"
 
     allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
