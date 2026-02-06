@@ -166,6 +166,11 @@ resource "aws_iam_policy" "lambda_extra" {
         ]
         Effect   = "Allow"
         Resource = [aws_sqs_queue.fast.arn, aws_sqs_queue.slow.arn]
+      },
+      {
+        Action   = ["s3:PutObject"]
+        Effect   = "Allow"
+        Resource = "${var.images_s3_bucket_arn}/*"
       }
     ]
   })

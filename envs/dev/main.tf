@@ -67,6 +67,9 @@ module "compute" {
   google_client_secret_name    = module.secrets.google_client_secret_name
   cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
   domain_name                  = "api.dev.cosmonaut-ai.com"
+  images_s3_bucket_arn         = module.images.s3_bucket_arn
+  images_s3_bucket_name        = module.images.s3_bucket_name
+  images_cdn_domain            = "images.dev.cosmonaut-ai.com"
 }
 
 module "frontend" {
@@ -78,17 +81,27 @@ module "frontend" {
   existing_waf_arn     = "arn:aws:wafv2:us-east-1:467508858251:global/webacl/cosmonaut-api-waf/9c542e15-ff8a-4c7b-90fa-1f202d52e139"
 }
 
+module "images" {
+  source               = "../../modules/images"
+  env                  = "dev"
+  domain_name          = "images.dev.cosmonaut-ai.com"
+  acm_certificate_arn  = module.frontend.acm_certificate_arn
+  cors_allowed_origins = local.cors_allowed_origins
+}
+
 module "dns" {
-  source                     = "../../modules/dns"
-  domain_name                = "cosmonaut-ai.com"
-  record_name                = "dev"
-  cloudfront_domain_name     = module.frontend.cloudfront_domain_name
-  acm_validation_records     = module.frontend.acm_validation_records
-  api_cloudfront_domain_name = module.frontend.api_cloudfront_domain_name
-  api_gateway_domain_name    = module.compute.api_gateway_domain_name
-  api_acm_validation_records = module.compute.api_acm_validation_records
-  api_record_name            = "api.dev"
-  streaming_record_name      = "streaming.dev"
+  source                        = "../../modules/dns"
+  domain_name                   = "cosmonaut-ai.com"
+  record_name                   = "dev"
+  cloudfront_domain_name        = module.frontend.cloudfront_domain_name
+  acm_validation_records        = module.frontend.acm_validation_records
+  api_cloudfront_domain_name    = module.frontend.api_cloudfront_domain_name
+  api_gateway_domain_name       = module.compute.api_gateway_domain_name
+  api_acm_validation_records    = module.compute.api_acm_validation_records
+  api_record_name               = "api.dev"
+  streaming_record_name         = "streaming.dev"
+  images_record_name            = "images.dev"
+  images_cloudfront_domain_name = module.images.cloudfront_domain_name
 }
 
 module "cicd" {

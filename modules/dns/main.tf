@@ -62,3 +62,12 @@ resource "cloudflare_record" "streaming" {
   proxied = false
   ttl     = 1
 }
+
+resource "cloudflare_record" "images" {
+  zone_id = data.cloudflare_zone.domain.id
+  name    = var.images_record_name
+  content = var.images_cloudfront_domain_name
+  type    = "CNAME"
+  proxied = false
+  ttl     = 1
+}

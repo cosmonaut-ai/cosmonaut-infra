@@ -53,3 +53,13 @@ variable "api_acm_validation_records" {
   }))
   default = {}
 }
+
+variable "images_record_name" {
+  description = "Subdomain for the images CDN (e.g., 'images' or 'images.dev')"
+  type        = string
+}
+
+variable "images_cloudfront_domain_name" {
+  description = "The CloudFront distribution domain name for the images CDN"
+  type        = string
+}

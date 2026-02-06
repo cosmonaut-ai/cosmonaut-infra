@@ -145,6 +145,8 @@ resource "aws_lambda_function" "worker_slow" {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
       GEMINI_TIMEOUT_S    = 900
+      IMAGES_S3_BUCKET    = var.images_s3_bucket_name
+      IMAGES_CDN_DOMAIN   = var.images_cdn_domain
     })
   }
 }

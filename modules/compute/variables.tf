@@ -84,6 +84,21 @@ variable "domain_name" {
   type        = string
 }
 
+variable "images_s3_bucket_arn" {
+  description = "ARN of the images S3 bucket"
+  type        = string
+}
+
+variable "images_s3_bucket_name" {
+  description = "Name of the images S3 bucket"
+  type        = string
+}
+
+variable "images_cdn_domain" {
+  description = "Custom domain for the images CDN (e.g., images.dev.cosmonaut-ai.com)"
+  type        = string
+}
+
 variable "lambda_architecture" {
   description = "Architecture for Lambda functions (x86_64 or arm64)"
   type        = string
