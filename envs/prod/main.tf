@@ -59,6 +59,7 @@ module "compute" {
   pinecone_index_name          = var.pinecone_index_name
   cognito_user_pool_id         = module.identity.cognito_user_pool_id
   cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
+  cognito_user_pool_arn        = module.identity.cognito_user_pool_arn
   cors_allowed_origins         = local.cors_allowed_origins
   mock_auth                    = false
   cloudfront_key_pair_id       = module.frontend.cloudfront_key_pair_id

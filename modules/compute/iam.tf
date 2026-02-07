@@ -171,6 +171,11 @@ resource "aws_iam_policy" "lambda_extra" {
         Action   = ["s3:PutObject"]
         Effect   = "Allow"
         Resource = "${var.images_s3_bucket_arn}/*"
+      },
+      {
+        Action   = ["cognito-idp:AdminUpdateUserAttributes"]
+        Effect   = "Allow"
+        Resource = var.cognito_user_pool_arn
       }
     ]
   })

@@ -16,6 +16,28 @@ resource "aws_cognito_user_pool" "main" {
     require_symbols   = true
     require_uppercase = true
   }
+
+  schema {
+    name                = "tier"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 0
+      max_length = 256
+    }
+  }
+
+  schema {
+    name                = "stripe_customer_id"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 0
+      max_length = 256
+    }
+  }
 }
 
 resource "aws_cognito_user_pool_client" "main" {
@@ -27,6 +49,35 @@ resource "aws_cognito_user_pool_client" "main" {
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_scopes                 = ["email", "openid", "profile"]
   supported_identity_providers         = ["Google"]
+
+  read_attributes = [
+    "custom:tier",
+    "custom:stripe_customer_id",
+    "email",
+    "email_verified",
+    "family_name",
+    "given_name",
+    "name",
+    "picture",
+    "preferred_username",
+    "profile",
+    "updated_at",
+    "zoneinfo"
+  ]
+
+  write_attributes = [
+    "custom:tier",
+    "custom:stripe_customer_id",
+    "email",
+    "family_name",
+    "given_name",
+    "name",
+    "picture",
+    "preferred_username",
+    "profile",
+    "updated_at",
+    "zoneinfo"
+  ]
 
   depends_on = [aws_cognito_identity_provider.google]
 }
