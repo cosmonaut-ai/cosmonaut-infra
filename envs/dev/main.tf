@@ -51,7 +51,9 @@ module "compute" {
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn,
     module.secrets.cloudfront_private_key_arn,
-    module.secrets.google_client_secret_arn
+    module.secrets.google_client_secret_arn,
+    module.secrets.stripe_api_key_arn,
+    module.secrets.stripe_webhook_secret_arn
   ]
   api_lambda_image_uri         = var.lambda_uri
   slow_worker_lambda_image_uri = var.lambda_uri
@@ -71,6 +73,11 @@ module "compute" {
   images_s3_bucket_arn         = module.images.s3_bucket_arn
   images_s3_bucket_name        = module.images.s3_bucket_name
   images_cdn_domain            = "images.dev.cosmonaut-ai.com"
+  stripe_api_key_name          = module.secrets.stripe_api_key_name
+  stripe_webhook_secret_name   = module.secrets.stripe_webhook_secret_name
+  stripe_portal_config_id      = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
+  stripe_price_explorer        = "price_1SyFksPGDPZNVxWVPgXVOvHa"
+  stripe_price_cosmonaut       = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
 }
 
 module "frontend" {

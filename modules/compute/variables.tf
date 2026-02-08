@@ -48,6 +48,31 @@ variable "cognito_user_pool_arn" {
   type        = string
 }
 
+variable "stripe_api_key_name" {
+  description = "Stripe API key name"
+  type        = string
+}
+
+variable "stripe_webhook_secret_name" {
+  description = "Stripe webhook secret name"
+  type        = string
+}
+
+variable "stripe_portal_config_id" {
+  description = "Stripe portal configuration ID"
+  type        = string
+}
+
+variable "stripe_price_explorer" {
+  description = "Stripe price ID for the Explorer tier"
+  type        = string
+}
+
+variable "stripe_price_cosmonaut" {
+  description = "Stripe price ID for the Cosmonaut tier"
+  type        = string
+}
+
 variable "cors_allowed_origins" {
   description = "List of allowed origins for CORS"
   type        = list(string)
@@ -120,4 +145,16 @@ variable "worker_fast_memory_size" {
   description = "Memory size for the fast worker Lambda function"
   type        = number
   default     = 1769
+}
+
+variable "webhook_route_prefix" {
+  description = "Route prefix for unauthenticated webhook endpoints (e.g., /webhook/stripe). Requests to this path bypass JWT auth so external services like Stripe can reach the Lambda."
+  type        = string
+  default     = "/webhooks"
+}
+
+variable "log_retention_days" {
+  description = "Number of days to retain CloudWatch logs for Lambda functions"
+  type        = number
+  default     = 30
 }

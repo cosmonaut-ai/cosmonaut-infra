@@ -29,3 +29,19 @@ output "cloudfront_private_key_arn" {
 output "cloudfront_private_key_name" {
   value = aws_ssm_parameter.cloudfront_private_key.name
 }
+
+output "stripe_api_key_arn" {
+  value = aws_ssm_parameter.stripe_api_key.arn
+}
+
+output "stripe_api_key_name" {
+  value = aws_ssm_parameter.stripe_api_key.name
+}
+
+output "stripe_webhook_secret_arn" {
+  value = aws_ssm_parameter.stripe_webhook_secret.arn
+}
+
+output "stripe_webhook_secret_name" {
+  value = aws_ssm_parameter.stripe_webhook_secret.name
+}

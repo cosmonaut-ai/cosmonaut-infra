@@ -66,6 +66,15 @@ resource "aws_apigatewayv2_route" "authenticated_root" {
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
+# Unauthenticated route for external webhooks (e.g., Stripe).
+# Signature verification is handled by the application, not API Gateway.
+resource "aws_apigatewayv2_route" "webhook" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST ${var.webhook_route_prefix}/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "NONE"
+}
+
 resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"

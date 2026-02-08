@@ -26,11 +26,18 @@ locals {
     # Environment
     ENV = var.env
 
+    # Stripe
+    STRIPE_PRICE_EXPLORER   = var.stripe_price_explorer
+    STRIPE_PRICE_COSMONAUT  = var.stripe_price_cosmonaut
+    STRIPE_PORTAL_CONFIG_ID = var.stripe_portal_config_id
+
     # SSM Parameter paths (for runtime secret fetching)
     PINECONE_API_KEY_PARAM       = var.pinecone_key_name
     GEMINI_API_KEY_PARAM         = var.gemini_key_name
     GOOGLE_CLIENT_SECRET_PARAM   = var.google_client_secret_name
     CLOUDFRONT_PRIVATE_KEY_PARAM = var.cloudfront_private_key_name
+    STRIPE_API_KEY_PARAM         = var.stripe_api_key_name
+    STRIPE_WEBHOOK_SECRET_PARAM  = var.stripe_webhook_secret_name
   }
 }
 
@@ -176,6 +183,27 @@ resource "aws_lambda_function" "api_streaming" {
   lifecycle {
     ignore_changes = [image_uri]
   }
+}
+
+# CloudWatch Log Groups for Lambda functions
+resource "aws_cloudwatch_log_group" "api" {
+  name              = "/aws/lambda/${aws_lambda_function.api.function_name}"
+  retention_in_days = var.log_retention_days
+}
+
+resource "aws_cloudwatch_log_group" "worker_fast" {
+  name              = "/aws/lambda/${aws_lambda_function.worker_fast.function_name}"
+  retention_in_days = var.log_retention_days
+}
+
+resource "aws_cloudwatch_log_group" "worker_slow" {
+  name              = "/aws/lambda/${aws_lambda_function.worker_slow.function_name}"
+  retention_in_days = var.log_retention_days
+}
+
+resource "aws_cloudwatch_log_group" "api_streaming" {
+  name              = "/aws/lambda/${aws_lambda_function.api_streaming.function_name}"
+  retention_in_days = var.log_retention_days
 }
 
 # Create a public URL for the Streaming API Lambda (Required for CloudFront)
