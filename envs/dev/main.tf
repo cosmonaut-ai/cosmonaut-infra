@@ -53,7 +53,8 @@ module "compute" {
     module.secrets.cloudfront_private_key_arn,
     module.secrets.google_client_secret_arn,
     module.secrets.stripe_api_key_arn,
-    module.secrets.stripe_webhook_secret_arn
+    module.secrets.stripe_webhook_secret_arn,
+    module.secrets.elevenlabs_key_arn
   ]
   api_lambda_image_uri         = var.lambda_uri
   slow_worker_lambda_image_uri = var.lambda_uri
@@ -70,11 +71,12 @@ module "compute" {
   google_client_secret_name    = module.secrets.google_client_secret_name
   cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
   domain_name                  = "api.dev.cosmonaut-ai.com"
-  images_s3_bucket_arn         = module.images.s3_bucket_arn
-  images_s3_bucket_name        = module.images.s3_bucket_name
-  images_cdn_domain            = "images.dev.cosmonaut-ai.com"
+  static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn
+  static_content_s3_bucket_name = module.static_content.s3_bucket_name
+  static_content_cdn_domain     = "images.dev.cosmonaut-ai.com"
   stripe_api_key_name          = module.secrets.stripe_api_key_name
   stripe_webhook_secret_name   = module.secrets.stripe_webhook_secret_name
+  elevenlabs_key_name          = module.secrets.elevenlabs_key_name
   stripe_portal_config_id      = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
   stripe_price_explorer        = "price_1SyFksPGDPZNVxWVPgXVOvHa"
   stripe_price_cosmonaut       = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
@@ -89,12 +91,17 @@ module "frontend" {
   existing_waf_arn     = "arn:aws:wafv2:us-east-1:467508858251:global/webacl/cosmonaut-api-waf/9c542e15-ff8a-4c7b-90fa-1f202d52e139"
 }
 
-module "images" {
-  source               = "../../modules/images"
+module "static_content" {
+  source               = "../../modules/static_content"
   env                  = "dev"
   domain_name          = "images.dev.cosmonaut-ai.com"
   acm_certificate_arn  = module.frontend.acm_certificate_arn
   cors_allowed_origins = local.cors_allowed_origins
+}
+
+moved {
+  from = module.images
+  to   = module.static_content
 }
 
 module "dns" {
@@ -108,8 +115,8 @@ module "dns" {
   api_acm_validation_records    = module.compute.api_acm_validation_records
   api_record_name               = "api.dev"
   streaming_record_name         = "streaming.dev"
-  images_record_name            = "images.dev"
-  images_cloudfront_domain_name = module.images.cloudfront_domain_name
+  static_content_record_name            = "images.dev"
+  static_content_cloudfront_domain_name = module.static_content.cloudfront_domain_name
 }
 
 module "cicd" {

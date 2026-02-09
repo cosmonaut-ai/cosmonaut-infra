@@ -51,3 +51,12 @@ resource "aws_ssm_parameter" "stripe_webhook_secret" {
     ignore_changes = [value]
   }
 }
+
+resource "aws_ssm_parameter" "elevenlabs_key" {
+  name  = "/${var.env}/cosmonaut/elevenlabs_api_key"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

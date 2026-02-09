@@ -35,6 +35,7 @@ read_secret() {
 read_secret "pinecone_api_key"
 read_secret "gemini_api_key"
 read_secret "google_client_secret"
+read_secret "elevenlabs_api_key"
 
 echo "All secrets updated for $ENV."
 

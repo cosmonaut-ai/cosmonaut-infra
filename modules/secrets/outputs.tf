@@ -45,3 +45,11 @@ output "stripe_webhook_secret_arn" {
 output "stripe_webhook_secret_name" {
   value = aws_ssm_parameter.stripe_webhook_secret.name
 }
+
+output "elevenlabs_key_arn" {
+  value = aws_ssm_parameter.elevenlabs_key.arn
+}
+
+output "elevenlabs_key_name" {
+  value = aws_ssm_parameter.elevenlabs_key.name
+}

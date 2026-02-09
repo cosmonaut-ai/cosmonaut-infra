@@ -63,11 +63,16 @@ resource "cloudflare_record" "streaming" {
   ttl     = 1
 }
 
-resource "cloudflare_record" "images" {
+resource "cloudflare_record" "static_content" {
   zone_id = data.cloudflare_zone.domain.id
-  name    = var.images_record_name
-  content = var.images_cloudfront_domain_name
+  name    = var.static_content_record_name
+  content = var.static_content_cloudfront_domain_name
   type    = "CNAME"
   proxied = false
   ttl     = 1
+}
+
+moved {
+  from = cloudflare_record.images
+  to   = cloudflare_record.static_content
 }

@@ -114,18 +114,18 @@ variable "domain_name" {
   type        = string
 }
 
-variable "images_s3_bucket_arn" {
-  description = "ARN of the images S3 bucket"
+variable "static_content_s3_bucket_arn" {
+  description = "ARN of the static content S3 bucket"
   type        = string
 }
 
-variable "images_s3_bucket_name" {
-  description = "Name of the images S3 bucket"
+variable "static_content_s3_bucket_name" {
+  description = "Name of the static content S3 bucket"
   type        = string
 }
 
-variable "images_cdn_domain" {
-  description = "Custom domain for the images CDN (e.g., images.dev.cosmonaut-ai.com)"
+variable "static_content_cdn_domain" {
+  description = "Custom domain for the static content CDN (e.g., images.dev.cosmonaut-ai.com)"
   type        = string
 }
 
@@ -151,6 +151,11 @@ variable "webhook_route_prefix" {
   description = "Route prefix for unauthenticated webhook endpoints (e.g., /webhook/stripe). Requests to this path bypass JWT auth so external services like Stripe can reach the Lambda."
   type        = string
   default     = "/webhooks"
+}
+
+variable "elevenlabs_key_name" {
+  description = "SSM parameter name for the ElevenLabs API key"
+  type        = string
 }
 
 variable "log_retention_days" {

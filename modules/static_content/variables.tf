@@ -4,7 +4,7 @@ variable "env" {
 }
 
 variable "domain_name" {
-  description = "Custom domain for the images CDN (e.g., images.dev.cosmonaut-ai.com)"
+  description = "Custom domain for the static content CDN (e.g., images.dev.cosmonaut-ai.com)"
   type        = string
 }
 

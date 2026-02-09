@@ -53,7 +53,8 @@ module "compute" {
     module.secrets.cloudfront_private_key_arn,
     module.secrets.google_client_secret_arn,
     module.secrets.stripe_api_key_arn,
-    module.secrets.stripe_webhook_secret_arn
+    module.secrets.stripe_webhook_secret_arn,
+    module.secrets.elevenlabs_key_arn
   ]
   api_lambda_image_uri         = var.api_lambda_image_uri
   slow_worker_lambda_image_uri = var.slow_worker_lambda_image_uri
@@ -70,11 +71,12 @@ module "compute" {
   google_client_secret_name    = module.secrets.google_client_secret_name
   cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
   domain_name                  = "api.cosmonaut-ai.com"
-  images_s3_bucket_arn         = module.images.s3_bucket_arn
-  images_s3_bucket_name        = module.images.s3_bucket_name
-  images_cdn_domain            = "images.cosmonaut-ai.com"
+  static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn
+  static_content_s3_bucket_name = module.static_content.s3_bucket_name
+  static_content_cdn_domain     = "images.cosmonaut-ai.com"
   stripe_api_key_name          = module.secrets.stripe_api_key_name
   stripe_webhook_secret_name   = module.secrets.stripe_webhook_secret_name
+  elevenlabs_key_name          = module.secrets.elevenlabs_key_name
   stripe_portal_config_id      = "bpc_1SyKcQAk6UN4EuOPQ1DFcu0v"
   stripe_price_explorer        = "price_1SyKZzAk6UN4EuOPzJJPIyND"
   stripe_price_cosmonaut       = "price_1SyKZvAk6UN4EuOPGsTySbju"
@@ -88,12 +90,17 @@ module "frontend" {
   cors_allowed_origins = local.cors_allowed_origins
 }
 
-module "images" {
-  source               = "../../modules/images"
+module "static_content" {
+  source               = "../../modules/static_content"
   env                  = "prod"
   domain_name          = "images.cosmonaut-ai.com"
   acm_certificate_arn  = module.frontend.acm_certificate_arn
   cors_allowed_origins = local.cors_allowed_origins
+}
+
+moved {
+  from = module.images
+  to   = module.static_content
 }
 
 module "dns" {
@@ -107,8 +114,8 @@ module "dns" {
   api_acm_validation_records    = module.compute.api_acm_validation_records
   api_record_name               = "api"
   streaming_record_name         = "streaming"
-  images_record_name            = "images"
-  images_cloudfront_domain_name = module.images.cloudfront_domain_name
+  static_content_record_name            = "images"
+  static_content_cloudfront_domain_name = module.static_content.cloudfront_domain_name
 }
 
 module "cicd" {

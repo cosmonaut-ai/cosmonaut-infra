@@ -23,6 +23,10 @@ locals {
     # CORS
     CORS_ORIGINS = jsonencode(var.cors_allowed_origins)
 
+    # Static content (S3 + CDN)
+    STATIC_CONTENT_S3_BUCKET  = var.static_content_s3_bucket_name
+    STATIC_CONTENT_CDN_DOMAIN = var.static_content_cdn_domain
+
     # Environment
     ENV = var.env
 
@@ -38,6 +42,7 @@ locals {
     CLOUDFRONT_PRIVATE_KEY_PARAM = var.cloudfront_private_key_name
     STRIPE_API_KEY_PARAM         = var.stripe_api_key_name
     STRIPE_WEBHOOK_SECRET_PARAM  = var.stripe_webhook_secret_name
+    ELEVENLABS_API_KEY_PARAM     = var.elevenlabs_key_name
   }
 }
 
@@ -152,8 +157,6 @@ resource "aws_lambda_function" "worker_slow" {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
       GEMINI_TIMEOUT_S    = 900
-      IMAGES_S3_BUCKET    = var.images_s3_bucket_name
-      IMAGES_CDN_DOMAIN   = var.images_cdn_domain
     })
   }
 }
