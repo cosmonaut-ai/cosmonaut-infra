@@ -182,7 +182,7 @@ resource "aws_iam_policy" "lambda_extra" {
         Resource = "${var.static_content_s3_bucket_arn}/*"
       },
       {
-        Action   = ["cognito-idp:AdminUpdateUserAttributes"]
+        Action   = ["cognito-idp:AdminUpdateUserAttributes", "cognito-idp:ListUsers"]
         Effect   = "Allow"
         Resource = var.cognito_user_pool_arn
       }
