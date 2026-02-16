@@ -27,6 +27,15 @@ logger.setLevel(logging.INFO)
 
 cognito: CognitoIdentityProviderClient = boto3.client("cognito-idp")
 
+# Cognito event userName uses lowercase prefixes (e.g. "google_123...")
+# but admin_link_provider_for_user requires the exact configured name.
+_PROVIDER_NAME_MAP: dict[str, str] = {
+    "google": "Google",
+    "facebook": "Facebook",
+    "loginwithamazon": "LoginWithAmazon",
+    "signinwithapple": "SignInWithApple",
+}
+
 
 # ---------------------------------------------------------------------------
 # Cognito Pre Sign-Up event types
@@ -78,18 +87,21 @@ def _handle_external_provider(event: _CognitoEvent, user_pool_id: str, email: st
     Google sign-in: check if a native (email/password) user exists with the
     same email. If so, link the Google identity to the existing native user.
     """
-    # The external provider username looks like "Google_<sub>"
+    # The external provider username looks like "google_<sub>" (lowercase)
     external_username = event["userName"]
-    provider_name, provider_uid = external_username.split("_", 1)
+    raw_provider, provider_uid = external_username.split("_", 1)
+    provider_name = _PROVIDER_NAME_MAP.get(raw_provider.lower(), raw_provider)
 
     existing_users = _find_users_by_email(user_pool_id, email)
 
     # Look for a native Cognito user (not a federated one)
+    _FEDERATED_PREFIXES = tuple(f"{p}_" for p in _PROVIDER_NAME_MAP.values())
+    _FEDERATED_PREFIXES_LOWER = tuple(f"{p}_" for p in _PROVIDER_NAME_MAP)
     native_user = None
     for user in existing_users:
         username = user["Username"]
-        # Native users don't have provider prefixes like "Google_"
-        if "_" not in username or not username.startswith(("Google_", "Facebook_", "LoginWithAmazon_", "SignInWithApple_")):
+        # Native users don't have provider prefixes
+        if not username.startswith(_FEDERATED_PREFIXES) and not username.startswith(_FEDERATED_PREFIXES_LOWER):
             native_user = user
             break
 
@@ -125,11 +137,11 @@ def _handle_native_signup(event: _CognitoEvent, user_pool_id: str, email: str) -
     """
     existing_users = _find_users_by_email(user_pool_id, email)
 
-    # Look for a federated Google user
+    # Look for a federated Google user (username may be lowercase or titlecase)
     google_user = None
     for user in existing_users:
         username = user["Username"]
-        if username.startswith("Google_"):
+        if username.lower().startswith("google_"):
             google_user = user
             break
 
