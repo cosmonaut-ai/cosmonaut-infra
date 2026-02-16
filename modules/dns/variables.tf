@@ -63,3 +63,28 @@ variable "static_content_cloudfront_domain_name" {
   description = "The CloudFront distribution domain name for the static content CDN"
   type        = string
 }
+
+# SES email variables
+variable "ses_enabled" {
+  description = "Whether SES email infrastructure is enabled (controls DNS record creation)"
+  type        = bool
+  default     = false
+}
+
+variable "ses_domain_verification_token" {
+  description = "SES domain identity verification token for TXT record"
+  type        = string
+  default     = ""
+}
+
+variable "ses_dkim_tokens" {
+  description = "DKIM tokens for SES domain authentication"
+  type        = list(string)
+  default     = []
+}
+
+variable "ses_mail_from_domain" {
+  description = "The MAIL FROM subdomain for SES (e.g., mail.cosmonaut-ai.com)"
+  type        = string
+  default     = ""
+}

@@ -18,3 +18,8 @@ variable "logout_urls" {
   type        = list(string)
 }
 
+variable "ses_domain_identity_arn" {
+  description = "ARN of the SES domain identity for sending emails"
+  type        = string
+  default     = ""
+}

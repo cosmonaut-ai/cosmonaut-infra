@@ -2,63 +2,29 @@
 
 This guide covers everything needed to enable traditional email/password sign-in alongside the existing Google OAuth provider in Cognito.
 
-## Summary of Infrastructure Changes
+## Implementation Status
 
-The following changes were made to `modules/identity/main.tf`:
+All infrastructure and application code has been implemented. The following components are in place:
 
-### User Pool
-
-| Change | Purpose |
-|--------|---------|
-| `username_attributes = ["email"]` | Users sign in with their email address instead of a separate username |
-| `username_configuration.case_sensitive = false` | `User@example.com` and `user@example.com` are treated as the same account |
-| `account_recovery_setting` | Enables "Forgot Password" flow via verified email |
-| `verification_message_template` | Customizes the verification code email sent during sign-up |
-| `schema "email"` (required) | Explicitly marks email as a required attribute for native sign-up |
-
-### User Pool Client
-
-| Change | Purpose |
-|--------|---------|
-| `supported_identity_providers = ["COGNITO", "Google"]` | Enables native email/password alongside Google |
-| `explicit_auth_flows` | Enables `USER_PASSWORD_AUTH`, `USER_SRP_AUTH`, and `ALLOW_REFRESH_TOKEN_AUTH` for programmatic sign-in |
+| Component | Status | Location |
+|-----------|--------|----------|
+| Cognito user pool (email/password) | Implemented | `modules/identity/main.tf` |
+| SES domain identity + DKIM | Implemented | `modules/email/main.tf` |
+| SES DNS records (Cloudflare) | Implemented | `modules/dns/main.tf` |
+| Cognito → SES integration | Implemented | `modules/identity/main.tf` (`email_configuration`) |
+| Branded email templates | Implemented | `lambdas/custom_message/index.py` |
+| Account de-duplication | Implemented | `lambdas/pre_sign_up/index.py` |
+| Frontend login/signup page | Implemented | `cosmonaut-web/src/routes/login/` |
+| Frontend auth module | Implemented | `cosmonaut-web/src/lib/auth/auth.svelte.ts` |
+| API account deletion | Implemented | `cosmonaut-api/app/services/account.py` |
+| API invite emails | Implemented | `cosmonaut-api/app/services/email.py` |
+| IAM permissions (SES, Cognito) | Implemented | `modules/compute/iam.tf` |
 
 ---
 
-## CRITICAL: User Pool Recreation
+## Deployment Steps
 
-> **Adding `username_attributes` is an immutable setting in Cognito.** Terraform will **destroy and recreate** the user pool on the next apply.
-
-### What this means
-
-- All existing users in the pool will be **permanently deleted**.
-- The user pool ID and client ID will change.
-- Google-authenticated users will simply re-authenticate on their next visit (Cognito recreates their profile automatically).
-- Any locally cached tokens in browsers will become invalid.
-
-### Before you apply
-
-1. **Check for existing user data** tied to Cognito user IDs in DynamoDB. If users are keyed by Cognito `sub`, those references will break because new `sub` values are assigned on re-authentication.
-
-   ```bash
-   # Check how many users currently exist (per environment)
-   aws cognito-idp list-users \
-     --user-pool-id <POOL_ID> \
-     --query 'Users | length(@)'
-   ```
-
-2. **If you have users with data**, you'll need a migration plan:
-   - Export user data from DynamoDB before applying.
-   - After apply, when users re-authenticate via Google, update the DynamoDB records to point to their new Cognito `sub`.
-   - Alternatively, if the app uses email as the primary key (not Cognito `sub`), no migration is needed.
-
-3. **Plan for brief downtime** — between the destroy and recreate, the auth endpoint will be unavailable (typically under 60 seconds during `terraform apply`).
-
----
-
-## Step 1: Deploy to Dev First
-
-Always apply to dev before prod.
+### Step 1: Deploy Infrastructure (Dev First)
 
 ```bash
 cd envs/dev
@@ -68,126 +34,90 @@ terraform plan
 
 Review the plan carefully. You should see:
 
-- `aws_cognito_user_pool.main` — **destroy and recreate**
-- `aws_cognito_user_pool_client.main` — **destroy and recreate** (depends on pool)
-- `aws_cognito_user_pool_domain.main` — **destroy and recreate**
-- `aws_cognito_identity_provider.google` — **destroy and recreate**
+- `module.email` — new SES resources
+- `module.identity` — updated with `email_configuration`, `lambda_config`, new Lambda functions
+- `module.dns` — new SES DNS records (TXT, CNAME, MX)
+- `module.compute` — updated IAM policy (SES + Cognito admin)
 
-Once satisfied:
+**CRITICAL: User Pool Recreation**
+
+> Adding `username_attributes` is an immutable setting in Cognito. If this hasn't been applied yet, Terraform will **destroy and recreate** the user pool.
+
+Before applying:
+
+1. Check for existing user data tied to Cognito `sub` in DynamoDB
+2. If users exist, plan for migration (new `sub` values will be assigned)
+3. Plan for brief downtime (~60 seconds during apply)
 
 ```bash
 terraform apply
 ```
 
----
+### Step 2: SES Production Access
 
-## Step 2: Configure Email Sending (Production Readiness)
+SES starts in **sandbox mode** (can only send to verified addresses, 50 emails/day limit).
 
-### Default Cognito Email (Dev — No Action Needed)
+To move to production:
 
-Cognito ships with a built-in email sender, but it has a **50 emails/day limit** and sends from `no-reply@verificationemail.com`. This is fine for dev/testing.
+1. Go to AWS Console → SES → Account dashboard
+2. Click "Request production access"
+3. Fill out the form:
+   - **Mail type**: Transactional
+   - **Website URL**: https://cosmonaut-ai.com
+   - **Use case description**: Account verification emails, password reset emails, and world sharing invitations for our interactive storytelling platform
+4. Wait for approval (typically 24-48 hours)
 
-### Amazon SES Integration (Recommended for Prod)
+Until approved, the dev environment falls back to Cognito's built-in sender (50 emails/day from `no-reply@verificationemail.com`).
 
-For production, configure SES so Cognito sends from your own domain with no daily cap.
+### Step 3: Deploy API
 
-1. **Verify your sending domain in SES** (us-east-2, matching your provider region):
+Push the `cosmonaut-api` changes to trigger the CI/CD pipeline:
 
-   ```bash
-   aws ses verify-domain-identity --domain cosmonaut-ai.com --region us-east-2
-   ```
-
-2. **Add the TXT record** SES returns to your Cloudflare DNS.
-
-3. **Request production access** — new SES accounts start in sandbox mode (can only send to verified addresses). Open a support case in the AWS console:
-   - Service: SES
-   - Category: Sending Limits
-   - Request type: "Move out of sandbox"
-
-4. **Once SES is verified**, add an `email_configuration` block to the user pool in `modules/identity/main.tf`:
-
-   ```hcl
-   email_configuration {
-     email_sending_account = "DEVELOPER"
-     from_email_address    = "noreply@cosmonaut-ai.com"
-     source_arn            = "arn:aws:ses:us-east-2:<ACCOUNT_ID>:identity/cosmonaut-ai.com"
-   }
-   ```
-
-   Then re-apply Terraform.
-
-> **If you skip this step**, everything still works — Cognito just uses its default sender with the 50/day limit.
-
----
-
-## Step 3: Update the Frontend (cosmonaut-web)
-
-The Cognito Hosted UI will automatically show an email/password form alongside the "Sign in with Google" button — no changes needed if you're using the Hosted UI redirect flow.
-
-If your frontend uses the **AWS Amplify SDK** or **direct Cognito API calls**, you'll need to add:
-
-### Sign-Up Flow
-
-```
-cognito-idp:SignUp
+```bash
+cd cosmonaut-api
+git push origin main  # or develop for dev
 ```
 
-- Collect: email, password (and optionally name)
-- Cognito sends a verification code to the email
-- User enters the code → call `ConfirmSignUp`
+The API deploy will pick up:
+- New email service (`app/services/email.py`)
+- New account service (`app/services/account.py`)
+- Updated auth endpoints (`DELETE /auth/account`)
+- Updated world sharing with invite emails
+- New environment variables (`SES_FROM_EMAIL`, `SES_ENABLED`)
 
-### Sign-In Flow
+### Step 4: Deploy Frontend
 
-```
-cognito-idp:InitiateAuth (AuthFlow: USER_PASSWORD_AUTH or USER_SRP_AUTH)
-```
+Push the `cosmonaut-web` changes:
 
-- Collect: email, password
-- Returns: ID token, access token, refresh token (same shape as Google OAuth tokens)
-
-### Forgot Password Flow
-
-```
-cognito-idp:ForgotPassword → cognito-idp:ConfirmForgotPassword
+```bash
+cd cosmonaut-web
+git push origin main  # or develop for dev
 ```
 
-- User enters email → Cognito sends a reset code
-- User enters code + new password → password is reset
+The frontend deploy will pick up:
+- New `/login` route with sign-in, sign-up, forgot-password flows
+- Updated auth module with email/password support
+- Updated landing page and layout navigation
+- Account deletion in settings
 
-### Key Implementation Notes
+### Step 5: Verify
 
-- The JWT tokens from email/password sign-in have the **same structure** as Google OAuth tokens. Your existing API Gateway JWT authorizer and Lambda auth logic will work without changes.
-- The `sub` claim in the token will be a Cognito-generated UUID (e.g., `abcd1234-...`), not a Google `sub`. Ensure your backend handles both.
+After deploying to each environment:
 
----
+- [ ] `terraform output` shows new pool/client IDs (if pool was recreated)
+- [ ] Cognito console shows email sign-in options + Google provider
+- [ ] Sign up with a new email → verification code arrives (branded template)
+- [ ] Confirm sign-up → can sign in with email/password
+- [ ] Sign in with Google → still works
+- [ ] Sign in with Google using same email → accounts are linked
+- [ ] Share a world → invite email arrives (branded template)
+- [ ] Forgot password → reset code arrives → can reset password
+- [ ] Delete account → all data removed, redirected to landing page
+- [ ] API calls with new tokens work
 
-## Step 4: Account Linking Considerations
+### Step 6: Deploy to Production
 
-When a user signs up with email/password using the same email that exists on a Google-authenticated account, Cognito treats them as **two separate users** by default.
-
-### Options
-
-| Approach | Description |
-|----------|-------------|
-| **Do nothing** | Users have separate accounts per provider. Simple, but may confuse users. |
-| **Pre Sign-Up Lambda trigger** | Auto-link accounts by email. Add a Lambda trigger that checks if the email already exists and links the identities. |
-| **Admin-link after the fact** | Use `admin-link-provider-for-user` API to merge accounts manually or on demand. |
-
-If you want auto-linking, you'd add a `lambda_config` block to the user pool:
-
-```hcl
-lambda_config {
-  pre_sign_up = aws_lambda_function.pre_sign_up_trigger.arn
-}
-```
-
-This is optional and can be added later.
-
----
-
-## Step 5: Apply to Production
-
-Once dev is verified and working:
+Once dev is verified:
 
 ```bash
 cd envs/prod
@@ -195,44 +125,52 @@ terraform plan
 terraform apply
 ```
 
-The same pool recreation will happen in prod. Follow the same migration precautions from the "Before you apply" section above.
+Follow the same migration precautions and verification steps.
 
 ---
 
-## Step 6: Verify
+## Architecture Details
 
-After applying to each environment, confirm:
+### Authentication Flow
 
-- [ ] `terraform output` shows new pool/client IDs
-- [ ] Cognito console (AWS → Cognito → User Pools) shows:
-  - Sign-in: **Email** listed under sign-in options
-  - Providers: **Cognito** and **Google** both listed
-  - App client: `explicit_auth_flows` includes `ALLOW_USER_PASSWORD_AUTH`
-- [ ] Hosted UI (`https://cosmonaut-<env>.auth.us-east-2.amazoncognito.com/login?client_id=<CLIENT_ID>&response_type=code&scope=email+openid+profile&redirect_uri=<CALLBACK_URL>`) shows both email/password fields and "Sign in with Google"
-- [ ] Test sign-up with a new email address — verification code arrives
-- [ ] Test sign-in with the new email/password — tokens are returned
-- [ ] Test sign-in with Google — still works as before
-- [ ] API calls with the new token work (JWT authorizer accepts it)
+```
+User → /login page
+  ├── Email/Password → Amplify signUp/signIn → Cognito → JWT
+  └── Google → Amplify signInWithRedirect → Cognito → JWT → /callback
 
----
+Pre-sign-up Lambda (account linking):
+  ├── Google sign-in + existing native user → auto-link
+  └── Native sign-up + existing Google user → link on next Google sign-in
 
-## Rollback
-
-If something goes wrong, revert the Terraform changes and re-apply:
-
-```bash
-git checkout -- modules/identity/main.tf
-cd envs/<env>
-terraform apply
+Custom message Lambda (branded emails):
+  ├── CustomMessage_SignUp → verification code email
+  ├── CustomMessage_ForgotPassword → password reset email
+  └── CustomMessage_ResendCode → resend verification email
 ```
 
-This will recreate the pool with the original configuration (Google-only). The same pool recreation / user loss caveats apply in reverse.
+### Email Templates
 
----
+All emails use a consistent Cosmonaut brand:
+- Dark background (`#0a0a0f`)
+- Card layout (`#111118` with `#1e1e2e` border)
+- Purple accent (`#7c3aed`)
+- Rocket emoji logo
+- Footer with Matson Software LLC branding
 
-## Reference: Password Policy
+Three template types:
+1. **Verification** — Welcome message + 6-digit code
+2. **Password Reset** — Reset instructions + 6-digit code
+3. **World Invite** — Inviter name, world title card, "Explore World" CTA button
 
-The password policy is unchanged from the existing configuration:
+### Account Deletion Cascade
+
+`DELETE /auth/account` performs:
+1. Cancel active Stripe subscriptions
+2. Delete all user-owned worlds (metadata + story nodes + Pinecone vectors)
+3. Delete UserUsage DynamoDB record
+4. Delete Cognito user identity
+
+### Password Policy
 
 | Requirement | Value |
 |-------------|-------|
@@ -241,3 +179,15 @@ The password policy is unchanged from the existing configuration:
 | Uppercase | Required |
 | Numbers | Required |
 | Symbols | Required |
+
+---
+
+## Rollback
+
+To revert to Google-only auth:
+
+1. Remove `lambda_config` and `email_configuration` from `modules/identity/main.tf`
+2. Revert the Lambda trigger resources
+3. Re-apply Terraform (note: removing `username_attributes` will recreate the pool again)
+4. Revert frontend to direct Google OAuth redirect
+5. Revert API changes (email service, account deletion)

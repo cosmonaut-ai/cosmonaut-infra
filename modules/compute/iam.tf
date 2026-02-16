@@ -191,9 +191,19 @@ resource "aws_iam_policy" "lambda_extra" {
         Resource = "${var.static_content_s3_bucket_arn}/*"
       },
       {
-        Action   = ["cognito-idp:AdminUpdateUserAttributes", "cognito-idp:ListUsers"]
+        Action = [
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers"
+        ]
         Effect   = "Allow"
         Resource = var.cognito_user_pool_arn
+      },
+      {
+        Action   = ["ses:SendEmail", "ses:SendRawEmail"]
+        Effect   = "Allow"
+        Resource = var.ses_domain_identity_arn != "" ? [var.ses_domain_identity_arn] : ["*"]
       }
     ]
   })

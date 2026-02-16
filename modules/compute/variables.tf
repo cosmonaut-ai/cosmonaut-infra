@@ -167,3 +167,9 @@ variable "log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "ses_domain_identity_arn" {
+  description = "ARN of the SES domain identity for sending emails"
+  type        = string
+  default     = ""
+}

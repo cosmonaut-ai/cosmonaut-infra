@@ -35,12 +35,18 @@ module "persistence" {
   env    = "dev"
 }
 
+module "email" {
+  source      = "../../modules/email"
+  domain_name = "cosmonaut-ai.com"
+}
+
 module "identity" {
-  source           = "../../modules/identity"
-  env              = "dev"
-  google_client_id = var.google_client_id
-  callback_urls    = ["https://dev.cosmonaut-ai.com/callback"]
-  logout_urls      = ["https://dev.cosmonaut-ai.com"]
+  source               = "../../modules/identity"
+  env                  = "dev"
+  google_client_id     = var.google_client_id
+  callback_urls        = ["https://dev.cosmonaut-ai.com/callback"]
+  logout_urls          = ["https://dev.cosmonaut-ai.com"]
+  ses_domain_identity_arn = module.email.ses_domain_identity_arn
 }
 
 module "compute" {
@@ -81,6 +87,7 @@ module "compute" {
   stripe_portal_config_id       = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
   stripe_price_explorer         = "price_1SyFksPGDPZNVxWVPgXVOvHa"
   stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
+  ses_domain_identity_arn       = module.email.ses_domain_identity_arn
 }
 
 module "frontend" {
@@ -118,6 +125,10 @@ module "dns" {
   streaming_record_name                 = "streaming.dev"
   static_content_record_name            = "images.dev"
   static_content_cloudfront_domain_name = module.static_content.cloudfront_domain_name
+  ses_enabled                           = true
+  ses_domain_verification_token         = module.email.ses_domain_identity_verification_token
+  ses_dkim_tokens                       = module.email.ses_dkim_tokens
+  ses_mail_from_domain                  = module.email.mail_from_domain
 }
 
 module "cicd" {

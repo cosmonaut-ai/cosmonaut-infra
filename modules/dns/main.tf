@@ -4,8 +4,14 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
     }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
+
+data "aws_region" "current" {}
 
 # Data source to get the Cloudflare zone
 data "cloudflare_zone" "domain" {
@@ -75,4 +81,53 @@ resource "cloudflare_record" "static_content" {
 moved {
   from = cloudflare_record.images
   to   = cloudflare_record.static_content
+}
+
+# SES domain verification TXT record
+resource "cloudflare_record" "ses_verification" {
+  count = var.ses_enabled ? 1 : 0
+
+  zone_id = data.cloudflare_zone.domain.id
+  name    = "_amazonses.${var.domain_name}"
+  content = var.ses_domain_verification_token
+  type    = "TXT"
+  ttl     = 60
+  proxied = false
+}
+
+# SES DKIM CNAME records (AWS SES always returns exactly 3 tokens)
+resource "cloudflare_record" "ses_dkim" {
+  count = var.ses_enabled ? 3 : 0
+
+  zone_id = data.cloudflare_zone.domain.id
+  name    = "${var.ses_dkim_tokens[count.index]}._domainkey.${var.domain_name}"
+  content = "${var.ses_dkim_tokens[count.index]}.dkim.amazonses.com"
+  type    = "CNAME"
+  ttl     = 60
+  proxied = false
+}
+
+# SES MAIL FROM MX record
+resource "cloudflare_record" "ses_mail_from_mx" {
+  count = var.ses_enabled ? 1 : 0
+
+  zone_id  = data.cloudflare_zone.domain.id
+  name     = var.ses_mail_from_domain
+  content  = "feedback-smtp.${data.aws_region.current.name}.amazonses.com"
+  type     = "MX"
+  priority = 10
+  ttl      = 60
+  proxied  = false
+}
+
+# SES MAIL FROM SPF record
+resource "cloudflare_record" "ses_mail_from_spf" {
+  count = var.ses_enabled ? 1 : 0
+
+  zone_id = data.cloudflare_zone.domain.id
+  name    = var.ses_mail_from_domain
+  content = "v=spf1 include:amazonses.com ~all"
+  type    = "TXT"
+  ttl     = 60
+  proxied = false
 }
