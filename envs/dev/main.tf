@@ -56,30 +56,30 @@ module "compute" {
     module.secrets.stripe_webhook_secret_arn,
     module.secrets.elevenlabs_key_arn
   ]
-  api_lambda_image_uri         = var.lambda_uri
-  slow_worker_lambda_image_uri = var.lambda_uri
-  fast_worker_lambda_image_uri = var.lambda_uri
-  pinecone_index_name          = var.pinecone_index_name
-  cognito_user_pool_id         = module.identity.cognito_user_pool_id
-  cognito_user_pool_client_id  = module.identity.cognito_user_pool_client_id
-  cognito_user_pool_arn        = module.identity.cognito_user_pool_arn
-  cors_allowed_origins         = local.cors_allowed_origins
-  mock_auth                    = false
-  cloudfront_key_pair_id       = module.frontend.cloudfront_key_pair_id
-  pinecone_key_name            = module.secrets.pinecone_key_name
-  gemini_key_name              = module.secrets.gemini_key_name
-  google_client_secret_name    = module.secrets.google_client_secret_name
-  cloudfront_private_key_name  = module.secrets.cloudfront_private_key_name
-  domain_name                  = "api.dev.cosmonaut-ai.com"
+  api_lambda_image_uri          = var.lambda_uri
+  slow_worker_lambda_image_uri  = var.lambda_uri
+  fast_worker_lambda_image_uri  = var.lambda_uri
+  pinecone_index_name           = var.pinecone_index_name
+  cognito_user_pool_id          = module.identity.cognito_user_pool_id
+  cognito_user_pool_client_id   = module.identity.cognito_user_pool_client_id
+  cognito_user_pool_arn         = module.identity.cognito_user_pool_arn
+  cors_allowed_origins          = local.cors_allowed_origins
+  mock_auth                     = false
+  cloudfront_key_pair_id        = module.frontend.cloudfront_key_pair_id
+  pinecone_key_name             = module.secrets.pinecone_key_name
+  gemini_key_name               = module.secrets.gemini_key_name
+  google_client_secret_name     = module.secrets.google_client_secret_name
+  cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
+  domain_name                   = "api.dev.cosmonaut-ai.com"
   static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn
   static_content_s3_bucket_name = module.static_content.s3_bucket_name
   static_content_cdn_domain     = "images.dev.cosmonaut-ai.com"
-  stripe_api_key_name          = module.secrets.stripe_api_key_name
-  stripe_webhook_secret_name   = module.secrets.stripe_webhook_secret_name
-  elevenlabs_key_name          = module.secrets.elevenlabs_key_name
-  stripe_portal_config_id      = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
-  stripe_price_explorer        = "price_1SyFksPGDPZNVxWVPgXVOvHa"
-  stripe_price_cosmonaut       = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
+  stripe_api_key_name           = module.secrets.stripe_api_key_name
+  stripe_webhook_secret_name    = module.secrets.stripe_webhook_secret_name
+  elevenlabs_key_name           = module.secrets.elevenlabs_key_name
+  stripe_portal_config_id       = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
+  stripe_price_explorer         = "price_1SyFksPGDPZNVxWVPgXVOvHa"
+  stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
 }
 
 module "frontend" {
@@ -105,16 +105,16 @@ moved {
 }
 
 module "dns" {
-  source                        = "../../modules/dns"
-  domain_name                   = "cosmonaut-ai.com"
-  record_name                   = "dev"
-  cloudfront_domain_name        = module.frontend.cloudfront_domain_name
-  acm_validation_records        = module.frontend.acm_validation_records
-  api_cloudfront_domain_name    = module.frontend.api_cloudfront_domain_name
-  api_gateway_domain_name       = module.compute.api_gateway_domain_name
-  api_acm_validation_records    = module.compute.api_acm_validation_records
-  api_record_name               = "api.dev"
-  streaming_record_name         = "streaming.dev"
+  source                                = "../../modules/dns"
+  domain_name                           = "cosmonaut-ai.com"
+  record_name                           = "dev"
+  cloudfront_domain_name                = module.frontend.cloudfront_domain_name
+  acm_validation_records                = module.frontend.acm_validation_records
+  api_cloudfront_domain_name            = module.frontend.api_cloudfront_domain_name
+  api_gateway_domain_name               = module.compute.api_gateway_domain_name
+  api_acm_validation_records            = module.compute.api_acm_validation_records
+  api_record_name                       = "api.dev"
+  streaming_record_name                 = "streaming.dev"
   static_content_record_name            = "images.dev"
   static_content_cloudfront_domain_name = module.static_content.cloudfront_domain_name
 }
