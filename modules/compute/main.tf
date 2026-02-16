@@ -28,7 +28,8 @@ locals {
     STATIC_CONTENT_CDN_DOMAIN = var.static_content_cdn_domain
 
     # Environment
-    ENV = var.env
+    ENV             = var.env
+    FRONTEND_DOMAIN = var.frontend_domain_name
 
     # Stripe
     STRIPE_PRICE_EXPLORER   = var.stripe_price_explorer

@@ -71,6 +71,7 @@ module "compute" {
   google_client_secret_name     = module.secrets.google_client_secret_name
   cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
   domain_name                   = "api.cosmonaut-ai.com"
+  frontend_domain_name          = "cosmonaut-ai.com"
   static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn
   static_content_s3_bucket_name = module.static_content.s3_bucket_name
   static_content_cdn_domain     = "images.cosmonaut-ai.com"

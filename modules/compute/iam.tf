@@ -75,6 +75,15 @@ resource "aws_apigatewayv2_route" "webhook" {
   authorization_type = "NONE"
 }
 
+# Unauthenticated route for OG metadata. Social media bots are redirected here
+# by the CloudFront bot_interceptor function to scrape Open Graph tags.
+resource "aws_apigatewayv2_route" "meta" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/meta/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "NONE"
+}
+
 resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"

@@ -114,6 +114,10 @@ variable "domain_name" {
   type        = string
 }
 
+variable "frontend_domain_name" {
+  description = "The domain name for the frontend (e.g., cosmonaut-ai.com)"
+  type        = string
+}
 variable "static_content_s3_bucket_arn" {
   description = "ARN of the static content S3 bucket"
   type        = string

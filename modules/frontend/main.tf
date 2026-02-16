@@ -78,6 +78,11 @@ resource "aws_cloudfront_distribution" "frontend" {
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.bot_interceptor.arn
+    }
   }
 
   # SPA Routing
@@ -203,6 +208,38 @@ function handler(event) {
         };
         return response;
     }
+    return request;
+}
+EOF
+}
+
+resource "aws_cloudfront_function" "bot_interceptor" {
+  name    = "cosmonaut-${var.env}-bot-interceptor"
+  runtime = "cloudfront-js-1.0"
+  comment = "Intercept social media bots and redirect to API for OG metadata"
+  publish = true
+  code    = <<EOF
+function handler(event) {
+    var request = event.request;
+    var headers = request.headers;
+    var uri = request.uri;
+
+    if (uri.indexOf('/worlds/') === 0) {
+        var userAgent = headers['user-agent'] ? headers['user-agent'].value.toLowerCase() : '';
+        var isBot = /bot|facebookexternalhit|twitter|discord|telegram|linkedin|slack|whatsapp|applebot|google|signal/i.test(userAgent);
+
+        if (isBot) {
+            return {
+                statusCode: 302,
+                statusDescription: 'Found',
+                headers: {
+                    'location': { value: 'https://api.${var.domain_name}/meta' + uri },
+                    'cache-control': { value: 'no-cache, no-store, must-revalidate' }
+                }
+            };
+        }
+    }
+
     return request;
 }
 EOF
