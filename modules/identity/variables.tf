@@ -24,6 +24,12 @@ variable "ses_domain_identity_arn" {
   default     = ""
 }
 
+variable "ses_email_domain" {
+  description = "Root domain for SES from-email address (e.g. cosmonaut-ai.com). Used when SES is enabled."
+  type        = string
+  default     = ""
+}
+
 variable "static_content_cdn_domain" {
   description = "CloudFront domain for static content (e.g. images.dev.cosmonaut-ai.com). Used by the custom_message Lambda for branded email assets."
   type        = string

@@ -6,7 +6,7 @@ locals {
     SLOW_WORKER_QUEUE_URL = aws_sqs_queue.slow.id
 
     # Database and storage
-    DYNAMODB_TABLE_NAME = var.dynamodb_table_arn
+    DYNAMODB_TABLE_NAME = var.dynamodb_table_name
     PINECONE_INDEX      = var.pinecone_index_name
 
     # Authentication

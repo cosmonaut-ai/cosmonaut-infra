@@ -2,7 +2,7 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  github_oidc_provider_arn = "arn:aws:iam::467508858251:oidc-provider/token.actions.githubusercontent.com"
+  github_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
 }
 
 # Reference existing GitHub Actions OIDC provider (already exists in AWS)

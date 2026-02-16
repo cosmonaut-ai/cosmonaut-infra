@@ -8,6 +8,11 @@ variable "dynamodb_table_arn" {
   type        = string
 }
 
+variable "dynamodb_table_name" {
+  description = "Name of the DynamoDB table"
+  type        = string
+}
+
 variable "ssm_parameter_arns" {
   description = "List of SSM parameter ARNs the Lambda needs access to"
   type        = list(string)
@@ -170,6 +175,18 @@ variable "log_retention_days" {
 
 variable "ses_domain_identity_arn" {
   description = "ARN of the SES domain identity for sending emails"
+  type        = string
+  default     = ""
+}
+
+variable "ses_email_domain" {
+  description = "Root domain for SES from-email address (e.g. cosmonaut-ai.com). Used when SES is enabled."
+  type        = string
+  default     = ""
+}
+
+variable "alarm_sns_topic_arn" {
+  description = "ARN of SNS topic for CloudWatch alarm notifications. If empty, alarms are created but do not send notifications."
   type        = string
   default     = ""
 }

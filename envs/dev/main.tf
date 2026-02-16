@@ -47,13 +47,15 @@ module "identity" {
   callback_urls             = ["https://dev.cosmonaut-ai.com/callback"]
   logout_urls               = ["https://dev.cosmonaut-ai.com"]
   ses_domain_identity_arn   = module.email.ses_domain_identity_arn
+  ses_email_domain          = "cosmonaut-ai.com"
   static_content_cdn_domain = "images.dev.cosmonaut-ai.com"
 }
 
 module "compute" {
   source             = "../../modules/compute"
   env                = "dev"
-  dynamodb_table_arn = module.persistence.table_arn
+  dynamodb_table_arn   = module.persistence.table_arn
+  dynamodb_table_name  = module.persistence.table_name
   ssm_parameter_arns = [
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn,
@@ -89,6 +91,7 @@ module "compute" {
   stripe_price_explorer         = "price_1SyFksPGDPZNVxWVPgXVOvHa"
   stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
   ses_domain_identity_arn       = module.email.ses_domain_identity_arn
+  ses_email_domain              = "cosmonaut-ai.com"
 }
 
 module "frontend" {

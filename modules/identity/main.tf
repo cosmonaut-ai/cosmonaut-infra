@@ -40,10 +40,10 @@ resource "aws_cognito_user_pool" "main" {
 
   # SES email configuration for branded sending
   dynamic "email_configuration" {
-    for_each = var.ses_domain_identity_arn != "" ? [1] : []
+    for_each = var.ses_domain_identity_arn != "" && var.ses_email_domain != "" ? [1] : []
     content {
       email_sending_account = "DEVELOPER"
-      from_email_address    = "Cosmonaut <noreply@cosmonaut-ai.com>"
+      from_email_address    = "Cosmonaut <noreply@${var.ses_email_domain}>"
       source_arn            = var.ses_domain_identity_arn
     }
   }

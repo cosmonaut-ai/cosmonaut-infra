@@ -54,6 +54,10 @@ resource "aws_dynamodb_table" "main" {
     enabled        = true
   }
 
+  point_in_time_recovery {
+    enabled = true
+  }
+
   tags = {
     Environment = var.env
     Project     = "cosmonaut"
