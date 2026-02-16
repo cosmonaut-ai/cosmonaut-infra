@@ -41,12 +41,13 @@ module "email" {
 }
 
 module "identity" {
-  source               = "../../modules/identity"
-  env                  = "prod"
-  google_client_id     = var.google_client_id
-  callback_urls        = ["https://cosmonaut-ai.com/callback"]
-  logout_urls          = ["https://cosmonaut-ai.com"]
-  ses_domain_identity_arn = module.email.ses_domain_identity_arn
+  source                    = "../../modules/identity"
+  env                       = "prod"
+  google_client_id          = var.google_client_id
+  callback_urls             = ["https://cosmonaut-ai.com/callback"]
+  logout_urls               = ["https://cosmonaut-ai.com"]
+  ses_domain_identity_arn   = module.email.ses_domain_identity_arn
+  static_content_cdn_domain = "images.cosmonaut-ai.com"
 }
 
 module "compute" {

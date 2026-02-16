@@ -1,0 +1,27 @@
+[project]
+name = "cosmonaut-infra-lambdas"
+version = "0.0.0"
+description = "Dev-only project for type-checking Cognito trigger Lambdas"
+requires-python = ">=3.13"
+# No runtime dependencies — Lambda functions use only stdlib + the Lambda
+# runtime's bundled boto3. This project exists solely to provide a venv
+# with type stubs for local development and CI type-checking.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "boto3-stubs[cognito-idp]",
+]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+# Lambda files contain inline HTML email templates where line breaks are impractical
+"lambdas/custom_message/index.py" = ["E501"]

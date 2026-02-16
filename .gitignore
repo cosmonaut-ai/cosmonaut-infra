@@ -9,6 +9,8 @@
 # Local development
 .env
 .DS_Store
+.venv/
+__pycache__/
 
 # Scripts
 scripts/*.log

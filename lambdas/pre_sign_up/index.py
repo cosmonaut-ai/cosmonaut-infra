@@ -11,19 +11,47 @@ Trigger sources handled:
   If a Google-federated user with the same email exists, link them together.
 """
 
-import json
+from __future__ import annotations
+
 import logging
-import os
+from typing import TYPE_CHECKING, TypedDict
 
 import boto3
+
+if TYPE_CHECKING:
+    from mypy_boto3_cognito_idp.client import CognitoIdentityProviderClient
+    from mypy_boto3_cognito_idp.type_defs import UserTypeTypeDef
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-cognito = boto3.client("cognito-idp")
+cognito: CognitoIdentityProviderClient = boto3.client("cognito-idp")
 
 
-def handler(event, context):
+# ---------------------------------------------------------------------------
+# Cognito Pre Sign-Up event types
+# ---------------------------------------------------------------------------
+
+
+class _Request(TypedDict):
+    userAttributes: dict[str, str]
+
+
+class _Response(TypedDict, total=False):
+    autoConfirmUser: bool
+    autoVerifyEmail: bool
+    autoVerifyPhone: bool
+
+
+class _CognitoEvent(TypedDict):
+    triggerSource: str
+    userPoolId: str
+    userName: str
+    request: _Request
+    response: _Response
+
+
+def handler(event: _CognitoEvent, _context: object) -> _CognitoEvent:
     trigger = event.get("triggerSource", "")
     user_pool_id = event["userPoolId"]
     email = event["request"]["userAttributes"].get("email", "").lower().strip()
@@ -45,7 +73,7 @@ def handler(event, context):
     return event
 
 
-def _handle_external_provider(event, user_pool_id, email):
+def _handle_external_provider(event: _CognitoEvent, user_pool_id: str, email: str) -> None:
     """
     Google sign-in: check if a native (email/password) user exists with the
     same email. If so, link the Google identity to the existing native user.
@@ -89,7 +117,7 @@ def _handle_external_provider(event, user_pool_id, email):
     event["response"]["autoVerifyEmail"] = True
 
 
-def _handle_native_signup(event, user_pool_id, email):
+def _handle_native_signup(event: _CognitoEvent, user_pool_id: str, email: str) -> None:
     """
     Email/password sign-up: check if a Google-federated user exists with the
     same email. If so, link the native identity to the existing federated user
@@ -127,7 +155,7 @@ def _handle_native_signup(event, user_pool_id, email):
     event["response"]["autoVerifyEmail"] = False
 
 
-def _find_users_by_email(user_pool_id, email):
+def _find_users_by_email(user_pool_id: str, email: str) -> list[UserTypeTypeDef]:
     """Find all Cognito users with the given email address."""
     response = cognito.list_users(
         UserPoolId=user_pool_id,

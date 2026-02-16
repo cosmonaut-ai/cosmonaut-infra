@@ -189,6 +189,12 @@ resource "aws_lambda_function" "custom_message" {
   source_code_hash = data.archive_file.custom_message.output_base64sha256
   timeout          = 5
   memory_size      = 128
+
+  environment {
+    variables = {
+      STATIC_CONTENT_CDN_DOMAIN = var.static_content_cdn_domain
+    }
+  }
 }
 
 resource "aws_lambda_permission" "custom_message" {

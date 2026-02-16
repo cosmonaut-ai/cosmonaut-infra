@@ -23,3 +23,9 @@ variable "ses_domain_identity_arn" {
   type        = string
   default     = ""
 }
+
+variable "static_content_cdn_domain" {
+  description = "CloudFront domain for static content (e.g. images.dev.cosmonaut-ai.com). Used by the custom_message Lambda for branded email assets."
+  type        = string
+  default     = ""
+}
