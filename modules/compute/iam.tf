@@ -1,4 +1,5 @@
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 locals {
   # These methods require authentication
@@ -203,7 +204,7 @@ resource "aws_iam_policy" "lambda_extra" {
       {
         Action   = ["ses:SendEmail", "ses:SendRawEmail"]
         Effect   = "Allow"
-        Resource = var.ses_domain_identity_arn != "" ? var.ses_domain_identity_arn : "*"
+        Resource = "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/*"
       }
     ]
   })
