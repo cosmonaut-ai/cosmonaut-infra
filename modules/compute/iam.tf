@@ -79,7 +79,7 @@ resource "aws_apigatewayv2_route" "webhook" {
 # by the CloudFront bot_interceptor function to scrape Open Graph tags.
 resource "aws_apigatewayv2_route" "meta" {
   api_id             = aws_apigatewayv2_api.main.id
-  route_key          = "GET /api/meta/{proxy+}"
+  route_key          = "GET /meta/{proxy+}"
   target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
   authorization_type = "NONE"
 }
