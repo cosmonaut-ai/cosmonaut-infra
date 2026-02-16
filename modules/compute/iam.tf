@@ -203,7 +203,7 @@ resource "aws_iam_policy" "lambda_extra" {
       {
         Action   = ["ses:SendEmail", "ses:SendRawEmail"]
         Effect   = "Allow"
-        Resource = var.ses_domain_identity_arn != "" ? [var.ses_domain_identity_arn] : ["*"]
+        Resource = "*"
       }
     ]
   })
