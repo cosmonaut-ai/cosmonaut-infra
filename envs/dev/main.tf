@@ -13,8 +13,14 @@ terraform {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
 locals {
   cors_allowed_origins = ["https://dev.cosmonaut-ai.com", "http://localhost:5173"]
+
+  # SES is a once-per-account/domain resource, owned by the prod environment.
+  # Dev references the same identity by ARN without managing the underlying resources.
+  ses_domain_identity_arn = "arn:aws:ses:us-east-2:${data.aws_caller_identity.current.account_id}:identity/cosmonaut-ai.com"
 }
 
 provider "aws" {
@@ -35,18 +41,13 @@ module "persistence" {
   env    = "dev"
 }
 
-module "email" {
-  source      = "../../modules/email"
-  domain_name = "cosmonaut-ai.com"
-}
-
 module "identity" {
   source                    = "../../modules/identity"
   env                       = "dev"
   google_client_id          = var.google_client_id
   callback_urls             = ["https://dev.cosmonaut-ai.com/callback"]
   logout_urls               = ["https://dev.cosmonaut-ai.com"]
-  ses_domain_identity_arn   = module.email.ses_domain_identity_arn
+  ses_domain_identity_arn   = local.ses_domain_identity_arn
   ses_email_domain          = "cosmonaut-ai.com"
   static_content_cdn_domain = "images.dev.cosmonaut-ai.com"
 }
@@ -90,7 +91,7 @@ module "compute" {
   stripe_portal_config_id       = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
   stripe_price_explorer         = "price_1SyFksPGDPZNVxWVPgXVOvHa"
   stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
-  ses_domain_identity_arn       = module.email.ses_domain_identity_arn
+  ses_domain_identity_arn       = local.ses_domain_identity_arn
   ses_email_domain              = "cosmonaut-ai.com"
 }
 
@@ -129,10 +130,6 @@ module "dns" {
   streaming_record_name                 = "streaming.dev"
   static_content_record_name            = "images.dev"
   static_content_cloudfront_domain_name = module.static_content.cloudfront_domain_name
-  ses_enabled                           = true
-  ses_domain_verification_token         = module.email.ses_domain_identity_verification_token
-  ses_dkim_tokens                       = module.email.ses_dkim_tokens
-  ses_mail_from_domain                  = module.email.mail_from_domain
 }
 
 module "cicd" {
