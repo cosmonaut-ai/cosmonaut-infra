@@ -17,6 +17,17 @@ locals {
   cors_allowed_origins = ["https://cosmonaut-ai.com"]
 }
 
+# SNS topic for CloudWatch alarm notifications
+resource "aws_sns_topic" "alarm_notifications" {
+  name = "cosmonaut-prod-alarm-notifications"
+}
+
+resource "aws_sns_topic_subscription" "alarm_email" {
+  topic_arn = aws_sns_topic.alarm_notifications.arn
+  protocol  = "email"
+  endpoint  = var.alarm_notification_email
+}
+
 provider "aws" {
   region = "us-east-2"
 }
@@ -88,6 +99,7 @@ module "compute" {
   stripe_webhook_secret_name    = module.secrets.stripe_webhook_secret_name
   elevenlabs_key_name           = module.secrets.elevenlabs_key_name
   stripe_portal_config_id       = "bpc_1SyKcQAk6UN4EuOPQ1DFcu0v"
+  alarm_sns_topic_arn           = aws_sns_topic.alarm_notifications.arn
   stripe_price_explorer         = "price_1SyKZzAk6UN4EuOPzJJPIyND"
   stripe_price_cosmonaut        = "price_1SyKZvAk6UN4EuOPGsTySbju"
   ses_domain_identity_arn       = module.email.ses_domain_identity_arn
@@ -169,4 +181,9 @@ variable "fast_worker_lambda_image_uri" {
 variable "pinecone_index_name" {
   type        = string
   description = "Name of the Pinecone index"
+}
+
+variable "alarm_notification_email" {
+  type        = string
+  description = "Email address to receive CloudWatch alarm notifications"
 }
