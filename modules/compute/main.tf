@@ -40,9 +40,12 @@ locals {
     STRIPE_PRICE_COSMONAUT  = var.stripe_price_cosmonaut
     STRIPE_PORTAL_CONFIG_ID = var.stripe_portal_config_id
 
+    # GCP / Vertex AI
+    GCP_PROJECT_ID = var.gcp_project_id
+    GCP_LOCATION   = var.gcp_location
+
     # SSM Parameter paths (for runtime secret fetching)
     PINECONE_API_KEY_PARAM       = var.pinecone_key_name
-    GEMINI_API_KEY_PARAM         = var.gemini_key_name
     GOOGLE_CLIENT_SECRET_PARAM   = var.google_client_secret_name
     CLOUDFRONT_PRIVATE_KEY_PARAM = var.cloudfront_private_key_name
     STRIPE_API_KEY_PARAM         = var.stripe_api_key_name

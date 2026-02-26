@@ -99,9 +99,15 @@ variable "pinecone_key_name" {
   type        = string
 }
 
-variable "gemini_key_name" {
-  description = "Name of the Gemini key"
+variable "gcp_project_id" {
+  description = "GCP project ID for Vertex AI"
   type        = string
+}
+
+variable "gcp_location" {
+  description = "GCP region for Vertex AI"
+  type        = string
+  default     = "us-central1"
 }
 
 variable "google_client_secret_name" {

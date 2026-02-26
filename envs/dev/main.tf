@@ -59,7 +59,6 @@ module "compute" {
   dynamodb_table_name = module.persistence.table_name
   ssm_parameter_arns = [
     module.secrets.pinecone_key_arn,
-    module.secrets.gemini_key_arn,
     module.secrets.cloudfront_private_key_arn,
     module.secrets.google_client_secret_arn,
     module.secrets.stripe_api_key_arn,
@@ -77,8 +76,8 @@ module "compute" {
   cors_allowed_origins          = local.cors_allowed_origins
   mock_auth                     = false
   cloudfront_key_pair_id        = module.frontend.cloudfront_key_pair_id
+  gcp_project_id                = "cosmonaut-481723"
   pinecone_key_name             = module.secrets.pinecone_key_name
-  gemini_key_name               = module.secrets.gemini_key_name
   google_client_secret_name     = module.secrets.google_client_secret_name
   cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
   buttondown_key_name           = module.secrets.buttondown_key_name
