@@ -53,3 +53,11 @@ output "elevenlabs_key_arn" {
 output "elevenlabs_key_name" {
   value = aws_ssm_parameter.elevenlabs_key.name
 }
+
+output "buttondown_key_arn" {
+  value = aws_ssm_parameter.buttondown_key.arn
+}
+
+output "buttondown_key_name" {
+  value = aws_ssm_parameter.buttondown_key.name
+}

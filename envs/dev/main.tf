@@ -53,10 +53,10 @@ module "identity" {
 }
 
 module "compute" {
-  source             = "../../modules/compute"
-  env                = "dev"
-  dynamodb_table_arn   = module.persistence.table_arn
-  dynamodb_table_name  = module.persistence.table_name
+  source              = "../../modules/compute"
+  env                 = "dev"
+  dynamodb_table_arn  = module.persistence.table_arn
+  dynamodb_table_name = module.persistence.table_name
   ssm_parameter_arns = [
     module.secrets.pinecone_key_arn,
     module.secrets.gemini_key_arn,
@@ -64,7 +64,8 @@ module "compute" {
     module.secrets.google_client_secret_arn,
     module.secrets.stripe_api_key_arn,
     module.secrets.stripe_webhook_secret_arn,
-    module.secrets.elevenlabs_key_arn
+    module.secrets.elevenlabs_key_arn,
+    module.secrets.buttondown_key_arn
   ]
   api_lambda_image_uri          = var.lambda_uri
   slow_worker_lambda_image_uri  = var.lambda_uri
@@ -80,6 +81,7 @@ module "compute" {
   gemini_key_name               = module.secrets.gemini_key_name
   google_client_secret_name     = module.secrets.google_client_secret_name
   cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
+  buttondown_key_name           = module.secrets.buttondown_key_name
   domain_name                   = "api.dev.cosmonaut-ai.com"
   frontend_domain_name          = "dev.cosmonaut-ai.com"
   static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn

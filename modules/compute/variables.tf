@@ -114,6 +114,11 @@ variable "cloudfront_private_key_name" {
   type        = string
 }
 
+variable "buttondown_key_name" {
+  description = "Name of the Buttondown API key"
+  type        = string
+}
+
 variable "domain_name" {
   description = "The domain name for the API (e.g., api.cosmonaut-ai.com)"
   type        = string

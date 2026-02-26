@@ -48,6 +48,7 @@ locals {
     STRIPE_API_KEY_PARAM         = var.stripe_api_key_name
     STRIPE_WEBHOOK_SECRET_PARAM  = var.stripe_webhook_secret_name
     ELEVENLABS_API_KEY_PARAM     = var.elevenlabs_key_name
+    BUTTONDOWN_API_KEY_PARAM     = var.buttondown_key_name
   }
 }
 
