@@ -55,15 +55,55 @@ locals {
   }
 }
 
+# SQS Dead Letter Queues — messages land here after 3 failed processing attempts
+resource "aws_sqs_queue" "fast_dlq" {
+  name                      = "cosmonaut-${var.env}-fast-dlq"
+  message_retention_seconds = 1209600 # 14 days
+}
+
+resource "aws_sqs_queue" "slow_dlq" {
+  name                      = "cosmonaut-${var.env}-slow-dlq"
+  message_retention_seconds = 1209600 # 14 days
+}
+
 # SQS queues for async processing
 resource "aws_sqs_queue" "fast" {
   name                       = "cosmonaut-${var.env}-fast"
   visibility_timeout_seconds = 60
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.fast_dlq.arn
+    maxReceiveCount     = 3
+  })
 }
 
 resource "aws_sqs_queue" "slow" {
   name                       = "cosmonaut-${var.env}-slow"
   visibility_timeout_seconds = 900
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.slow_dlq.arn
+    maxReceiveCount     = 3
+  })
+}
+
+# Allow the DLQs to identify their source queues (enables redrive-from-DLQ in console)
+resource "aws_sqs_queue_redrive_allow_policy" "fast_dlq" {
+  queue_url = aws_sqs_queue.fast_dlq.id
+
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue"
+    sourceQueueArns   = [aws_sqs_queue.fast.arn]
+  })
+}
+
+resource "aws_sqs_queue_redrive_allow_policy" "slow_dlq" {
+  queue_url = aws_sqs_queue.slow_dlq.id
+
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue"
+    sourceQueueArns   = [aws_sqs_queue.slow.arn]
+  })
 }
 
 # Event source mappings to route SQS messages to the shared Lambda worker handler

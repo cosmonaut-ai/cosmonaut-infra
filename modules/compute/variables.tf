@@ -107,7 +107,7 @@ variable "gcp_project_id" {
 variable "gcp_location" {
   description = "GCP region for Vertex AI"
   type        = string
-  default     = "us-central1"
+  default     = "global"
 }
 
 variable "google_client_secret_name" {

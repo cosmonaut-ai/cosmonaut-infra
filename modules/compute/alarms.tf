@@ -104,3 +104,43 @@ resource "aws_cloudwatch_metric_alarm" "sqs_slow_queue_age" {
   alarm_description = "Slow SQS queue has messages older than 30 minutes for cosmonaut-${var.env}"
   alarm_actions     = local.alarm_actions
 }
+
+# 6. Fast DLQ — any message here means 3 consecutive processing failures
+resource "aws_cloudwatch_metric_alarm" "sqs_fast_dlq_messages" {
+  alarm_name          = "cosmonaut-${var.env}-sqs-fast-dlq-messages"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.fast_dlq.name
+  }
+
+  alarm_description = "Fast DLQ has messages (3x failed processing) for cosmonaut-${var.env}"
+  alarm_actions     = local.alarm_actions
+}
+
+# 7. Slow DLQ — any message here means 3 consecutive processing failures
+resource "aws_cloudwatch_metric_alarm" "sqs_slow_dlq_messages" {
+  alarm_name          = "cosmonaut-${var.env}-sqs-slow-dlq-messages"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.slow_dlq.name
+  }
+
+  alarm_description = "Slow DLQ has messages (3x failed processing) for cosmonaut-${var.env}"
+  alarm_actions     = local.alarm_actions
+}

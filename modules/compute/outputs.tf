@@ -22,6 +22,22 @@ output "slow_queue_arn" {
   value = aws_sqs_queue.slow.arn
 }
 
+output "fast_dlq_url" {
+  value = aws_sqs_queue.fast_dlq.id
+}
+
+output "fast_dlq_arn" {
+  value = aws_sqs_queue.fast_dlq.arn
+}
+
+output "slow_dlq_url" {
+  value = aws_sqs_queue.slow_dlq.id
+}
+
+output "slow_dlq_arn" {
+  value = aws_sqs_queue.slow_dlq.arn
+}
+
 output "api_function_url" {
   description = "The Function URL endpoint for the API Lambda (Used for streaming responses)"
   value       = aws_lambda_function_url.api.function_url

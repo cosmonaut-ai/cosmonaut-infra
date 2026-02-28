@@ -183,8 +183,13 @@ resource "aws_iam_policy" "lambda_extra" {
           "sqs:ChangeMessageVisibility",
           "sqs:GetQueueUrl"
         ]
-        Effect   = "Allow"
-        Resource = [aws_sqs_queue.fast.arn, aws_sqs_queue.slow.arn]
+        Effect = "Allow"
+        Resource = [
+          aws_sqs_queue.fast.arn,
+          aws_sqs_queue.slow.arn,
+          aws_sqs_queue.fast_dlq.arn,
+          aws_sqs_queue.slow_dlq.arn,
+        ]
       },
       {
         Action   = ["s3:PutObject"]
