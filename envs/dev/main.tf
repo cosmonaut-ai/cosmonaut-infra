@@ -77,6 +77,7 @@ module "compute" {
   mock_auth                     = false
   cloudfront_key_pair_id        = module.frontend.cloudfront_key_pair_id
   gcp_project_id                = "cosmonaut-481723"
+  gcp_location                  = "global"
   pinecone_key_name             = module.secrets.pinecone_key_name
   google_client_secret_name     = module.secrets.google_client_secret_name
   cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
