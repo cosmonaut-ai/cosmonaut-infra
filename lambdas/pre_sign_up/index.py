@@ -129,7 +129,7 @@ def _handle_native_signup(event: _CognitoEvent, user_pool_id: str, email: str) -
 
     if existing_user:
         logger.warning("Blocking native signup for %s — account already exists", email)
-        raise Exception("An account with this email already exists. Please sign in with your existing method.")
+        raise Exception("AccountAlreadyExists")
 
     event["response"]["autoConfirmUser"] = False
     event["response"]["autoVerifyEmail"] = False
