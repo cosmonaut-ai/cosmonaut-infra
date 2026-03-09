@@ -1,14 +1,19 @@
 """
 Cognito Pre Sign-Up Lambda Trigger
 
-Handles account de-duplication by linking identities when the same email
-is used across multiple sign-in providers (native email/password + Google).
+Prevents duplicate accounts by enforcing one-user-per-email across all
+sign-in providers (native email/password, Google, Apple, etc.).
 
 Trigger sources handled:
-- PreSignUp_ExternalProvider: A federated user (Google) is signing in.
-  If a native user with the same email exists, link the Google identity to it.
+
+- PreSignUp_ExternalProvider: A federated user is signing in for the first
+  time. If any user with the same email already exists, the new provider
+  identity is linked to the existing user via adminLinkProviderForUser.
+  Errors block signup to prevent duplicates (fail closed).
+
 - PreSignUp_SignUp: A native user is signing up with email/password.
-  If a Google-federated user with the same email exists, link them together.
+  If any user with the same email already exists, signup is blocked
+  outright — the user must sign in with their existing provider.
 """
 
 from __future__ import annotations
@@ -70,52 +75,38 @@ def handler(event: _CognitoEvent, _context: object) -> _CognitoEvent:
     if not email:
         return event
 
-    try:
-        if trigger == "PreSignUp_ExternalProvider":
-            _handle_external_provider(event, user_pool_id, email)
-        elif trigger == "PreSignUp_SignUp":
-            _handle_native_signup(event, user_pool_id, email)
-    except Exception:
-        logger.exception("Error in pre_sign_up trigger for %s", email)
-        # Don't block sign-up on linking errors; let it proceed normally
+    if trigger == "PreSignUp_ExternalProvider":
+        _handle_external_provider(event, user_pool_id, email)
+    elif trigger == "PreSignUp_SignUp":
+        _handle_native_signup(event, user_pool_id, email)
 
     return event
 
 
 def _handle_external_provider(event: _CognitoEvent, user_pool_id: str, email: str) -> None:
     """
-    Google sign-in: check if a native (email/password) user exists with the
-    same email. If so, link the Google identity to the existing native user.
+    Federated sign-in (Google, Apple, etc.): if any user with the same
+    email already exists, link the new provider identity to that user.
+    If linking fails, the exception propagates and blocks signup.
     """
-    # The external provider username looks like "google_<sub>" (lowercase)
     external_username = event["userName"]
     raw_provider, provider_uid = external_username.split("_", 1)
     provider_name = _PROVIDER_NAME_MAP.get(raw_provider.lower(), raw_provider)
 
-    existing_users = _find_users_by_email(user_pool_id, email)
+    existing_user = _find_existing_user(user_pool_id, email, exclude_username=external_username)
 
-    # Look for a native Cognito user (not a federated one)
-    _FEDERATED_PREFIXES = tuple(f"{p}_" for p in _PROVIDER_NAME_MAP.values())
-    _FEDERATED_PREFIXES_LOWER = tuple(f"{p}_" for p in _PROVIDER_NAME_MAP)
-    native_user = None
-    for user in existing_users:
-        username = user["Username"]
-        # Native users don't have provider prefixes
-        if not username.startswith(_FEDERATED_PREFIXES) and not username.startswith(_FEDERATED_PREFIXES_LOWER):
-            native_user = user
-            break
-
-    if native_user:
+    if existing_user:
+        dest_username = existing_user.get("Username", "")
         logger.info(
-            "Linking external provider %s to existing native user %s",
+            "Linking external provider %s to existing user %s",
             external_username,
-            native_user["Username"],
+            dest_username,
         )
         cognito.admin_link_provider_for_user(
             UserPoolId=user_pool_id,
             DestinationUser={
                 "ProviderName": "Cognito",
-                "ProviderAttributeValue": native_user["Username"],
+                "ProviderAttributeValue": dest_username,
             },
             SourceUser={
                 "ProviderName": provider_name,
@@ -124,47 +115,41 @@ def _handle_external_provider(event: _CognitoEvent, user_pool_id: str, email: st
             },
         )
 
-    # Auto-confirm and auto-verify for external providers
     event["response"]["autoConfirmUser"] = True
     event["response"]["autoVerifyEmail"] = True
 
 
 def _handle_native_signup(event: _CognitoEvent, user_pool_id: str, email: str) -> None:
     """
-    Email/password sign-up: check if a Google-federated user exists with the
-    same email. If so, link the native identity to the existing federated user
-    by making the new native user the primary and attaching the Google identity.
+    Email/password sign-up: block if any user with this email already
+    exists. The unverified email at this stage makes linking unsafe, so
+    we direct the user to sign in with their existing provider instead.
     """
-    existing_users = _find_users_by_email(user_pool_id, email)
+    existing_user = _find_existing_user(user_pool_id, email)
 
-    # Look for a federated Google user (username may be lowercase or titlecase)
-    google_user = None
-    for user in existing_users:
-        username = user["Username"]
-        if username.lower().startswith("google_"):
-            google_user = user
-            break
+    if existing_user:
+        logger.warning("Blocking native signup for %s — account already exists", email)
+        raise Exception("An account with this email already exists. Please sign in with your existing method.")
 
-    if google_user:
-        google_username = google_user["Username"]
-        _, google_uid = google_username.split("_", 1)
-
-        logger.info(
-            "Found existing Google user %s for email %s — will link after native user is created",
-            google_username,
-            email,
-        )
-
-        # We can't link here because the native user hasn't been created yet.
-        # Instead, we allow the sign-up to proceed. The linking will happen
-        # the next time the Google user signs in (handled by PreSignUp_ExternalProvider).
-        #
-        # However, we should NOT auto-confirm — the user still needs to verify
-        # their email to prove ownership.
-
-    # Don't auto-confirm native sign-ups; they must verify email
     event["response"]["autoConfirmUser"] = False
     event["response"]["autoVerifyEmail"] = False
+
+
+def _find_existing_user(
+    user_pool_id: str, email: str, *, exclude_username: str | None = None
+) -> UserTypeTypeDef | None:
+    """Return the first existing user with this email, or None.
+
+    When called from the external-provider path, *exclude_username* filters
+    out the incoming federated identity (which hasn't been created yet but
+    whose username is known from the event).
+    """
+    users = _find_users_by_email(user_pool_id, email)
+    for user in users:
+        if exclude_username and user.get("Username", "").lower() == exclude_username.lower():
+            continue
+        return user
+    return None
 
 
 def _find_users_by_email(user_pool_id: str, email: str) -> list[UserTypeTypeDef]:

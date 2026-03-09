@@ -35,3 +35,9 @@ variable "static_content_cdn_domain" {
   type        = string
   default     = ""
 }
+
+variable "log_retention_days" {
+  description = "Number of days to retain CloudWatch logs for Lambda functions"
+  type        = number
+  default     = 30
+}

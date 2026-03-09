@@ -198,6 +198,11 @@ resource "aws_lambda_function" "custom_message" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "custom_message" {
+  name              = "/aws/lambda/${aws_lambda_function.custom_message.function_name}"
+  retention_in_days = var.log_retention_days
+}
+
 resource "aws_lambda_permission" "custom_message" {
   statement_id  = "AllowCognitoInvoke"
   action        = "lambda:InvokeFunction"
@@ -228,6 +233,11 @@ resource "aws_lambda_function" "pre_sign_up" {
 
   # No environment variables needed — the Lambda reads userPoolId
   # directly from the Cognito trigger event payload.
+}
+
+resource "aws_cloudwatch_log_group" "pre_sign_up" {
+  name              = "/aws/lambda/${aws_lambda_function.pre_sign_up.function_name}"
+  retention_in_days = var.log_retention_days
 }
 
 resource "aws_lambda_permission" "pre_sign_up" {
