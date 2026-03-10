@@ -307,3 +307,54 @@ resource "aws_iam_role_policy_attachment" "cognito_triggers_extra_attach" {
   role       = aws_iam_role.cognito_triggers.name
   policy_arn = aws_iam_policy.cognito_triggers_extra.arn
 }
+
+# ---------------------------------------------------------------------------
+# WAF for Cognito — IP-based rate limiting on signup operations
+# ---------------------------------------------------------------------------
+
+resource "aws_wafv2_web_acl" "cognito_protection" {
+  count = var.env == "prod" ? 1 : 0
+
+  name        = "cosmonaut-${var.env}-cognito-waf"
+  description = "Rate limiting for Cognito signup operations"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "cosmonaut-${var.env}-cognito-waf"
+    sampled_requests_enabled   = true
+  }
+
+  rule {
+    name     = "SignupRateLimit"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 20
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "CognitoSignupRateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "cognito" {
+  count = var.env == "prod" ? 1 : 0
+
+  resource_arn = aws_cognito_user_pool.main.arn
+  web_acl_arn  = aws_wafv2_web_acl.cognito_protection[0].arn
+}

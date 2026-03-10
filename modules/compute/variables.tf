@@ -207,3 +207,15 @@ variable "alarm_sns_topic_arn" {
   type        = string
   default     = ""
 }
+
+variable "api_throttle_rate_limit" {
+  description = "API Gateway steady-state request rate limit (requests/second)"
+  type        = number
+  default     = 100
+}
+
+variable "api_throttle_burst_limit" {
+  description = "API Gateway burst request limit"
+  type        = number
+  default     = 50
+}
