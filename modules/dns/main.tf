@@ -131,3 +131,17 @@ resource "cloudflare_record" "ses_mail_from_spf" {
   ttl     = 60
   proxied = false
 }
+
+# DMARC policy for the root domain — enables Gmail (and other receivers) to
+# validate SPF/DKIM alignment for mail sent via SES.  Starting with p=none
+# (monitor only) so existing flows are not disrupted.
+resource "cloudflare_record" "dmarc" {
+  count = var.ses_enabled ? 1 : 0
+
+  zone_id = data.cloudflare_zone.domain.id
+  name    = "_dmarc.${var.domain_name}"
+  content = "v=DMARC1; p=none; rua=mailto:dmarc-reports@cosmonaut-ai.com"
+  type    = "TXT"
+  ttl     = 60
+  proxied = false
+}

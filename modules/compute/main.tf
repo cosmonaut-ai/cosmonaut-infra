@@ -32,8 +32,9 @@ locals {
     FRONTEND_DOMAIN = var.frontend_domain_name
 
     # SES Email
-    SES_FROM_EMAIL = var.ses_domain_identity_arn != "" ? "Cosmonaut <noreply@cosmonaut-ai.com>" : ""
-    SES_ENABLED    = var.ses_domain_identity_arn != "" ? "true" : "false"
+    SES_FROM_EMAIL    = var.ses_domain_identity_arn != "" ? "Cosmonaut <noreply@${var.ses_email_domain}>" : ""
+    SES_SUPPORT_EMAIL = var.ses_domain_identity_arn != "" ? "support@${var.ses_email_domain}" : ""
+    SES_ENABLED       = var.ses_domain_identity_arn != "" ? "true" : "false"
 
     # Stripe
     STRIPE_PRICE_EXPLORER   = var.stripe_price_explorer
