@@ -75,6 +75,7 @@ module "compute" {
   cognito_user_pool_arn         = module.identity.cognito_user_pool_arn
   cors_allowed_origins          = local.cors_allowed_origins
   mock_auth                     = false
+  dev_allowed_emails            = var.dev_allowed_emails
   cloudfront_key_pair_id        = module.frontend.cloudfront_key_pair_id
   gcp_project_id                = "cosmonaut-481723"
   gcp_location                  = "global"
@@ -159,4 +160,10 @@ variable "lambda_uri" {
 variable "pinecone_index_name" {
   type        = string
   description = "Name of the Pinecone index"
+}
+
+variable "dev_allowed_emails" {
+  type        = list(string)
+  description = "Email allowlist for dev environment access control"
+  default     = []
 }

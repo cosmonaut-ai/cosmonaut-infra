@@ -100,6 +100,16 @@ resource "aws_cognito_user_pool_client" "main" {
   supported_identity_providers         = ["COGNITO", "Google"]
   prevent_user_existence_errors        = "ENABLED"
 
+  access_token_validity  = 1
+  id_token_validity      = 1
+  refresh_token_validity = 30
+
+  token_validity_units {
+    access_token  = "hours"
+    id_token      = "hours"
+    refresh_token = "days"
+  }
+
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_USER_SRP_AUTH",

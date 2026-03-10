@@ -28,8 +28,9 @@ locals {
     STATIC_CONTENT_CDN_DOMAIN = var.static_content_cdn_domain
 
     # Environment
-    ENV             = var.env
-    FRONTEND_DOMAIN = var.frontend_domain_name
+    ENV                = var.env
+    FRONTEND_DOMAIN    = var.frontend_domain_name
+    DEV_ALLOWED_EMAILS = jsonencode(var.dev_allowed_emails)
 
     # SES Email
     SES_FROM_EMAIL    = var.ses_domain_identity_arn != "" ? "Cosmonaut <noreply@${var.ses_email_domain}>" : ""

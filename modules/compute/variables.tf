@@ -178,6 +178,12 @@ variable "elevenlabs_key_name" {
   type        = string
 }
 
+variable "dev_allowed_emails" {
+  description = "Email allowlist for dev environment access control. Only used when env=dev."
+  type        = list(string)
+  default     = []
+}
+
 variable "log_retention_days" {
   description = "Number of days to retain CloudWatch logs for Lambda functions"
   type        = number
