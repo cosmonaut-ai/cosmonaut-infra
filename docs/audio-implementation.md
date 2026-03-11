@@ -41,7 +41,7 @@ We need to store references to the audio files on the story nodes and track user
 
 - **Configuration (`app/core/config.py`):**
 - Update `TIER_LIMITS` to include `audio_limit` for each tier:
-- **Free:** Set a low fixed limit (e.g., 20) to represent "one story".
+- **Free:** Set a low fixed limit (e.g., 10) to represent "one story".
 - **Explorer:** 60.
 - **Cosmonaut:** 200.
 
