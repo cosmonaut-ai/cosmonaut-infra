@@ -219,3 +219,21 @@ variable "api_throttle_burst_limit" {
   type        = number
   default     = 50
 }
+
+variable "model_small" {
+  description = "Vertex AI model name for small/fast tasks (Gemini)"
+  type        = string
+  default     = "gemini-3-flash-preview"
+}
+
+variable "model_large" {
+  description = "Vertex AI model name for large/complex tasks (Gemini)"
+  type        = string
+  default     = "gemini-3.1-pro-preview"
+}
+
+variable "model_small_anthropic" {
+  description = "Vertex AI model name for small tasks (Anthropic)"
+  type        = string
+  default     = "claude-haiku-4-5"
+}

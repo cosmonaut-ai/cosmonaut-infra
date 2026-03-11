@@ -32,6 +32,13 @@ logger.setLevel(logging.INFO)
 
 cognito: CognitoIdentityProviderClient = boto3.client("cognito-idp")
 
+
+def _redact_email(email: str) -> str:
+    """Return a deterministic hash prefix for PII-safe logging."""
+    import hashlib
+    return f"[email:{hashlib.sha256(email.encode()).hexdigest()[:8]}]"
+
+
 # Cognito event userName uses lowercase prefixes (e.g. "google_123...")
 # but admin_link_provider_for_user requires the exact configured name.
 _PROVIDER_NAME_MAP: dict[str, str] = {
@@ -70,7 +77,7 @@ def handler(event: _CognitoEvent, _context: object) -> _CognitoEvent:
     user_pool_id = event["userPoolId"]
     email = event["request"]["userAttributes"].get("email", "").lower().strip()
 
-    logger.info("Pre sign-up trigger: %s for email: %s", trigger, email)
+    logger.info("Pre sign-up trigger: %s for email: %s", trigger, _redact_email(email))
 
     if not email:
         return event
@@ -128,7 +135,7 @@ def _handle_native_signup(event: _CognitoEvent, user_pool_id: str, email: str) -
     existing_user = _find_existing_user(user_pool_id, email)
 
     if existing_user:
-        logger.warning("Blocking native signup for %s — account already exists", email)
+        logger.warning("Blocking native signup for %s — account already exists", _redact_email(email))
         raise Exception("AccountAlreadyExists")
 
     event["response"]["autoConfirmUser"] = False

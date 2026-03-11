@@ -198,9 +198,14 @@ resource "aws_iam_policy" "lambda_extra" {
         ]
       },
       {
-        Action   = ["s3:PutObject"]
+        Action   = ["s3:PutObject", "s3:DeleteObject"]
         Effect   = "Allow"
         Resource = "${var.static_content_s3_bucket_arn}/*"
+      },
+      {
+        Action   = ["s3:ListBucket"]
+        Effect   = "Allow"
+        Resource = var.static_content_s3_bucket_arn
       },
       {
         Action = [

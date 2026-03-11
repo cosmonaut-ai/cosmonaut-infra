@@ -11,6 +11,16 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_cloudfront_origin_access_control" "frontend" {
   name                              = "cosmonaut-${var.env}-oac"
   origin_access_control_origin_type = "s3"

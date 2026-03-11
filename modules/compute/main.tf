@@ -46,6 +46,11 @@ locals {
     GCP_PROJECT_ID = var.gcp_project_id
     GCP_LOCATION   = var.gcp_location
 
+    # Model selection (override defaults in cosmonaut-api/app/core/config.py)
+    MODEL_SMALL           = var.model_small
+    MODEL_LARGE           = var.model_large
+    MODEL_SMALL_ANTHROPIC = var.model_small_anthropic
+
     # SSM Parameter paths (for runtime secret fetching)
     PINECONE_API_KEY_PARAM       = var.pinecone_key_name
     GOOGLE_CLIENT_SECRET_PARAM   = var.google_client_secret_name
@@ -81,7 +86,7 @@ resource "aws_sqs_queue" "fast" {
 
 resource "aws_sqs_queue" "slow" {
   name                       = "cosmonaut-${var.env}-slow"
-  visibility_timeout_seconds = 900
+  visibility_timeout_seconds = 5400
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.slow_dlq.arn
@@ -230,7 +235,7 @@ resource "aws_lambda_function" "api_streaming" {
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "RESPONSE_STREAM"
-      GEMINI_TIMEOUT_S    = 900
+      VERTEX_TIMEOUT_S    = 120
     })
   }
 
