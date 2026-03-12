@@ -42,8 +42,8 @@ We need to store references to the audio files on the story nodes and track user
 - **Configuration (`app/core/config.py`):**
 - Update `TIER_LIMITS` to include `audio_limit` for each tier:
 - **Free:** Set a low fixed limit (e.g., 10) to represent "one story".
-- **Explorer:** 60.
-- **Cosmonaut:** 200.
+- **Explorer:** 30.
+- **Cosmonaut:** 150.
 
 - **Usage Service (`app/services/usage.py`):**
 - Update `_METRIC_ATTR` mapping to include `"audio": "audio_narrations_used"`.
@@ -99,7 +99,7 @@ We need to store references to the audio files on the story nodes and track user
 
 1. **User** clicks "Play Audio" on a story node.
 2. **Frontend** calls `POST /audio`.
-3. **Backend** checks if User has used < 60 (Explorer) audio generations this month.
+3. **Backend** checks if User has used < 30 (Explorer) audio generations this month.
 4. **Backend** sends text to ElevenLabs Flash 2.5.
 5. **Backend** saves MP3 to S3 and updates DynamoDB.
 6. **Backend** returns URL.

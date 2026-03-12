@@ -119,6 +119,10 @@ resource "aws_lambda_event_source_mapping" "fast_queue" {
   function_name    = aws_lambda_function.worker_fast.function_name
   batch_size       = 10
 
+  scaling_config {
+    maximum_concurrency = 50
+  }
+
   # Enable partial batch response so workers can return per-message failures
   function_response_types = ["ReportBatchItemFailures"]
 }
@@ -179,7 +183,6 @@ resource "aws_lambda_function" "worker_fast" {
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
-      GEMINI_TIMEOUT_S    = 900
     })
   }
 
@@ -207,12 +210,9 @@ resource "aws_lambda_function" "worker_slow" {
     ignore_changes = [image_uri]
   }
 
-  # Throttling is handled by the Event Source Mapping you already added!
-
   environment {
     variables = merge(local.lambda_env_vars, {
       AWS_LWA_INVOKE_MODE = "passthrough" # Bypass the aws-lambda-adapter for the worker
-      GEMINI_TIMEOUT_S    = 900
     })
   }
 }
