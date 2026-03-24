@@ -25,28 +25,43 @@ resource "aws_dynamodb_table" "main" {
   }
 
   attribute {
-    name = "GSI2PK"
+    name = "GSI3PK"
     type = "S"
   }
 
   attribute {
-    name = "GSI2SK"
+    name = "GSI3SK"
     type = "S"
   }
 
   global_secondary_index {
     name            = "GSI1"
-    hash_key        = "GSI1PK"
-    range_key       = "GSI1SK"
     projection_type = "ALL"
+
+    key_schema {
+      attribute_name = "GSI1PK"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "GSI1SK"
+      key_type       = "RANGE"
+    }
   }
 
   global_secondary_index {
-    name               = "GSI2"
-    hash_key           = "GSI2PK"
-    range_key          = "GSI2SK"
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["node_title", "node_parent_id", "node_choices", "node_id", "generation_status"]
+    name            = "GSI3"
+    projection_type = "KEYS_ONLY"
+
+    key_schema {
+      attribute_name = "GSI3PK"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "GSI3SK"
+      key_type       = "RANGE"
+    }
   }
 
   ttl {
