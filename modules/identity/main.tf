@@ -87,6 +87,17 @@ resource "aws_cognito_user_pool" "main" {
       max_length = 256
     }
   }
+
+  schema {
+    name                = "username"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 0
+      max_length = 256
+    }
+  }
 }
 
 resource "aws_cognito_user_pool_client" "main" {
@@ -119,6 +130,7 @@ resource "aws_cognito_user_pool_client" "main" {
   read_attributes = [
     "custom:tier",
     "custom:stripe_customer_id",
+    "custom:username",
     "email",
     "email_verified",
     "family_name",
@@ -134,6 +146,7 @@ resource "aws_cognito_user_pool_client" "main" {
   write_attributes = [
     "custom:tier",
     "custom:stripe_customer_id",
+    "custom:username",
     "email",
     "family_name",
     "given_name",
