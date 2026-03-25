@@ -61,3 +61,11 @@ output "buttondown_key_arn" {
 output "buttondown_key_name" {
   value = aws_ssm_parameter.buttondown_key.name
 }
+
+output "admin_api_key_arn" {
+  value = aws_ssm_parameter.admin_api_key.arn
+}
+
+output "admin_api_key_name" {
+  value = aws_ssm_parameter.admin_api_key.name
+}

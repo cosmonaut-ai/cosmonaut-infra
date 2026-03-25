@@ -74,7 +74,8 @@ module "compute" {
     module.secrets.stripe_api_key_arn,
     module.secrets.stripe_webhook_secret_arn,
     module.secrets.elevenlabs_key_arn,
-    module.secrets.buttondown_key_arn
+    module.secrets.buttondown_key_arn,
+    module.secrets.admin_api_key_arn
   ]
   api_lambda_image_uri          = var.api_lambda_image_uri
   slow_worker_lambda_image_uri  = var.slow_worker_lambda_image_uri
@@ -92,6 +93,7 @@ module "compute" {
   google_client_secret_name     = module.secrets.google_client_secret_name
   cloudfront_private_key_name   = module.secrets.cloudfront_private_key_name
   buttondown_key_name           = module.secrets.buttondown_key_name
+  admin_api_key_name            = module.secrets.admin_api_key_name
   domain_name                   = "api.cosmonaut-ai.com"
   frontend_domain_name          = "cosmonaut-ai.com"
   static_content_s3_bucket_arn  = module.static_content.s3_bucket_arn

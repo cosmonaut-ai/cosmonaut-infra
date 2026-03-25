@@ -69,3 +69,12 @@ resource "aws_ssm_parameter" "buttondown_key" {
     ignore_changes = [value]
   }
 }
+
+resource "aws_ssm_parameter" "admin_api_key" {
+  name  = "/${var.env}/cosmonaut/admin_api_key"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
