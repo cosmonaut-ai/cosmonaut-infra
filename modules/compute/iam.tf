@@ -82,6 +82,16 @@ resource "aws_apigatewayv2_route" "webhook" {
   authorization_type = "NONE"
 }
 
+# Unauthenticated routes for the admin portal (API-key auth handled by the app).
+resource "aws_apigatewayv2_route" "admin" {
+  for_each = toset(["POST", "DELETE"])
+
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "${each.value} /admin/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "NONE"
+}
+
 # Unauthenticated health check for external uptime monitoring.
 resource "aws_apigatewayv2_route" "health" {
   api_id             = aws_apigatewayv2_api.main.id
