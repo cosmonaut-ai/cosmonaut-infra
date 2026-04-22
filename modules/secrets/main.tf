@@ -78,3 +78,12 @@ resource "aws_ssm_parameter" "admin_api_key" {
     ignore_changes = [value]
   }
 }
+
+resource "aws_ssm_parameter" "posthog_project_token" {
+  name  = "/${var.env}/cosmonaut/posthog_project_token"
+  type  = "SecureString"
+  value = "CHANGE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
