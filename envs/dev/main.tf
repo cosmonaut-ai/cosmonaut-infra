@@ -98,6 +98,7 @@ module "compute" {
   stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
   ses_domain_identity_arn       = local.ses_domain_identity_arn
   ses_email_domain              = "cosmonaut-ai.com"
+  posthog_project_token         = var.posthog_project_token
 }
 
 module "frontend" {
@@ -168,4 +169,10 @@ variable "dev_allowed_emails" {
   type        = list(string)
   description = "Email allowlist for dev environment access control"
   default     = []
+}
+
+variable "posthog_project_token" {
+  type        = string
+  description = "PostHog project token (write-only, not sensitive)"
+  default     = ""
 }

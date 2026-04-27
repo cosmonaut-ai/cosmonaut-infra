@@ -242,3 +242,15 @@ variable "model_small_anthropic" {
   type        = string
   default     = "claude-haiku-4-5"
 }
+
+variable "posthog_project_token" {
+  description = "PostHog project token (write-only, not sensitive)"
+  type        = string
+  default     = ""
+}
+
+variable "posthog_host" {
+  description = "PostHog ingestion host"
+  type        = string
+  default     = "https://us.i.posthog.com"
+}

@@ -229,6 +229,8 @@ resource "aws_iam_policy" "lambda_extra" {
         Action = [
           "cognito-idp:AdminUpdateUserAttributes",
           "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminDisableUser",
+          "cognito-idp:AdminEnableUser",
           "cognito-idp:AdminGetUser",
           "cognito-idp:ListUsers"
         ]

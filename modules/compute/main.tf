@@ -51,6 +51,10 @@ locals {
     MODEL_LARGE           = var.model_large
     MODEL_SMALL_ANTHROPIC = var.model_small_anthropic
 
+    # PostHog (write-only project token, not a secret)
+    POSTHOG_PROJECT_TOKEN = var.posthog_project_token
+    POSTHOG_HOST          = var.posthog_host
+
     # SSM Parameter paths (for runtime secret fetching)
     PINECONE_API_KEY_PARAM       = var.pinecone_key_name
     GOOGLE_CLIENT_SECRET_PARAM   = var.google_client_secret_name
@@ -275,7 +279,7 @@ resource "aws_lambda_function_url" "api" {
 
   cors {
     allow_origins  = var.cors_allowed_origins
-    allow_headers  = ["content-type", "authorization"]
+    allow_headers  = ["content-type", "authorization", "x-posthog-distinct-id", "x-posthog-session-id"]
     expose_headers = ["content-type", "x-new-node-id"]
     max_age        = 300
   }
