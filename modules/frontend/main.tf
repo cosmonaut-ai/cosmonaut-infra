@@ -66,41 +66,11 @@ resource "aws_cloudfront_distribution" "frontend" {
     origin_id                = "S3-${aws_s3_bucket.frontend.bucket}"
   }
 
-  # PostHog reverse proxy origin (avoids ad-blockers blocking analytics)
-  origin {
-    domain_name = "us.i.posthog.com"
-    origin_id   = "PostHogOrigin"
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
 
   aliases = [var.domain_name]
-
-  # PostHog analytics proxy — strip /ingest prefix and forward to PostHog
-  ordered_cache_behavior {
-    path_pattern     = "/ingest/*"
-    target_origin_id = "PostHogOrigin"
-
-    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods  = ["GET", "HEAD"]
-
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHost
-    viewer_protocol_policy   = "redirect-to-https"
-
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.posthog_proxy.arn
-    }
-  }
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -152,21 +122,6 @@ resource "aws_cloudfront_distribution" "frontend" {
 
   # Wait for certificate validation before creating distribution
   depends_on = [aws_acm_certificate_validation.cert]
-}
-
-resource "aws_cloudfront_function" "posthog_proxy" {
-  name    = "cosmonaut-${var.env}-posthog-proxy"
-  runtime = "cloudfront-js-2.0"
-  comment = "Strip /ingest prefix for PostHog reverse proxy"
-  publish = true
-  code    = <<EOF
-function handler(event) {
-    var request = event.request;
-    request.uri = request.uri.replace(/^\/ingest/, '');
-    if (request.uri === '') request.uri = '/';
-    return request;
-}
-EOF
 }
 
 resource "aws_s3_bucket_policy" "frontend" {
@@ -308,7 +263,7 @@ resource "aws_cloudfront_response_headers_policy" "api_cors" {
     access_control_allow_credentials = true
 
     access_control_allow_headers {
-      items = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-PostHog-Distinct-Id", "X-PostHog-Session-Id"]
+      items = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token"]
     }
 
     access_control_allow_methods {
