@@ -94,7 +94,7 @@ module "compute" {
   stripe_webhook_secret_name    = module.secrets.stripe_webhook_secret_name
   elevenlabs_key_name           = module.secrets.elevenlabs_key_name
   stripe_portal_config_id       = "bpc_1SyK6nPGDPZNVxWVVSDCz2gj"
-  stripe_price_explorer         = "price_1SyFksPGDPZNVxWVPgXVOvHa"
+  stripe_price_explorer         = "price_1TUvQMPGDPZNVxWVS5ykpSil"
   stripe_price_cosmonaut        = "price_1SyFlrPGDPZNVxWVBod0IuBJ"
   ses_domain_identity_arn       = local.ses_domain_identity_arn
   ses_email_domain              = "cosmonaut-ai.com"

@@ -104,7 +104,7 @@ module "compute" {
   elevenlabs_key_name           = module.secrets.elevenlabs_key_name
   stripe_portal_config_id       = "bpc_1SyKcQAk6UN4EuOPQ1DFcu0v"
   alarm_sns_topic_arn           = aws_sns_topic.alarm_notifications.arn
-  stripe_price_explorer         = "price_1SyKZzAk6UN4EuOPzJJPIyND"
+  stripe_price_explorer         = "price_1TUvTrAk6UN4EuOPfDI5IffT"
   stripe_price_cosmonaut        = "price_1SyKZvAk6UN4EuOPGsTySbju"
   ses_domain_identity_arn       = module.email.ses_domain_identity_arn
   ses_email_domain              = "cosmonaut-ai.com"

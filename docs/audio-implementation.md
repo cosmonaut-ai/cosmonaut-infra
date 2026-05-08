@@ -41,13 +41,13 @@ We need to store references to the audio files on the story nodes and track user
 
 - **Configuration (`app/core/config.py`):**
 - Update `TIER_LIMITS` to include `audio_limit` for each tier:
-- **Free:** Set a low fixed limit (e.g., 10) to represent "one story".
-- **Explorer:** 30.
-- **Cosmonaut:** 150.
+- **Free:** 10 (lifetime, never resets).
+- **Explorer:** 10 (lifetime, shared pool with Free — never resets).
+- **Cosmonaut:** 150 (monthly, resets each billing period).
 
 - **Usage Service (`app/services/usage.py`):**
 - Update `_METRIC_ATTR` mapping to include `"audio": "audio_narrations_used"`.
-- **Crucial Logic Change:** Modify `get_or_create_usage`. In the "Lazy period reset" block, add logic to _skip_ resetting `audio_narrations_used` if the user is on the **Free** tier. This enforces the "First story only" (lifetime limit) rule, whereas paid tiers should reset monthly.
+- **Crucial Logic Change:** Modify `get_or_create_usage`. In the "Lazy period reset" block, add logic to _skip_ resetting `audio_narrations_used` unless the user is on the **Cosmonaut** tier. Free and Explorer share a lifetime pool that never resets. The audio counter persists across FREE ↔ EXPLORER tier changes.
 
 - **Audio Service (`app/services/audio.py` - New File):**
 - Create a service to handle ElevenLabs interaction.
