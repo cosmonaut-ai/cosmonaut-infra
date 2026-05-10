@@ -56,7 +56,7 @@ module "identity" {
   env                       = "prod"
   google_client_id          = var.google_client_id
   callback_urls             = ["https://cosmonaut-ai.com/callback", "cosmonaut://callback"]
-  logout_urls               = ["https://cosmonaut-ai.com", "cosmonaut://"]
+  logout_urls               = ["https://cosmonaut-ai.com", "cosmonaut://", "cosmonaut://callback"]
   ses_domain_identity_arn   = module.email.ses_domain_identity_arn
   ses_email_domain          = "cosmonaut-ai.com"
   static_content_cdn_domain = "images.cosmonaut-ai.com"
