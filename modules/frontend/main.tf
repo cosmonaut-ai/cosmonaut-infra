@@ -91,7 +91,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.bot_interceptor.arn
+      function_arn = aws_cloudfront_function.viewer_request.arn
     }
   }
 
@@ -223,36 +223,36 @@ function handler(event) {
 EOF
 }
 
-resource "aws_cloudfront_function" "bot_interceptor" {
-  name    = "cosmonaut-${var.env}-bot-interceptor"
-  runtime = "cloudfront-js-1.0"
-  comment = "Intercept social media bots and redirect to API for OG metadata"
+# Combined viewer-request function: bot interception (redirect crawlers on
+# /worlds/* to the API meta endpoint) + directory-index rewriting (so
+# `/foo/` and `/foo` resolve to `/foo/index.html` and S3 serves the
+# prerendered HTML for non-JS agents).
+#
+# Replaces the prior `aws_cloudfront_function.bot_interceptor` resource;
+# state is migrated via the `moved` block below. CloudFront only permits
+# one viewer-request function per cache behavior, so both concerns are
+# colocated here.
+resource "aws_cloudfront_function" "viewer_request" {
+  name    = "cosmonaut-${var.env}-viewer-request"
+  runtime = "cloudfront-js-2.0"
+  comment = "Bot interceptor + directory-index rewrite for prerendered HTML"
   publish = true
-  code    = <<EOF
-function handler(event) {
-    var request = event.request;
-    var headers = request.headers;
-    var uri = request.uri;
+  code = templatefile("${path.module}/functions/viewer-request.js", {
+    domain_name = var.domain_name
+  })
 
-    if (uri.indexOf('/worlds/') === 0) {
-        var userAgent = headers['user-agent'] ? headers['user-agent'].value.toLowerCase() : '';
-        var isBot = /bot|facebookexternalhit|twitter|discord|telegram|linkedin|slack|whatsapp|applebot|google|signal/i.test(userAgent);
-
-        if (isBot) {
-            return {
-                statusCode: 302,
-                statusDescription: 'Found',
-                headers: {
-                    'location': { value: 'https://api.${var.domain_name}/meta' + uri },
-                    'cache-control': { value: 'no-cache, no-store, must-revalidate' }
-                }
-            };
-        }
-    }
-
-    return request;
+  # CloudFront refuses to delete a function while it's still attached to a
+  # distribution. With create_before_destroy, Terraform creates the new
+  # function, updates the distribution's function_association to point at
+  # it, and only then destroys the old function.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
-EOF
+
+moved {
+  from = aws_cloudfront_function.bot_interceptor
+  to   = aws_cloudfront_function.viewer_request
 }
 
 resource "aws_cloudfront_response_headers_policy" "api_cors" {
