@@ -1,87 +1,116 @@
-# Cosmonaut AI Infrastructure
+# Cosmonaut Infrastructure
 
-Infrastructure as Code for the Cosmonaut AI project, using Terraform and AWS.
+Terraform infrastructure for [Cosmonaut AI](https://cosmonaut-ai.com), an AI-powered interactive storytelling platform.
+
+This repository provisions the AWS and Cloudflare resources used by the API, web app, authentication, static content, email, DNS, and deployment roles.
+
+## Repository Role
+
+Cosmonaut is split across several public repositories:
+
+- [`cosmonaut-web`](https://github.com/cosmonaut-ai/cosmonaut-web): SvelteKit frontend.
+- [`cosmonaut-api`](https://github.com/cosmonaut-ai/cosmonaut-api): Backend API and workers.
+- [`cosmonaut-infra`](https://github.com/cosmonaut-ai/cosmonaut-infra): Terraform infrastructure.
+- [`cosmonaut-android`](https://github.com/cosmonaut-ai/cosmonaut-android): Native Android client.
+
+## Stack
+
+- Terraform
+- AWS Lambda, API Gateway, SQS, DynamoDB, S3, CloudFront, ACM, SES, Cognito, IAM, SSM Parameter Store
+- Cloudflare DNS
+- GitHub Actions OIDC roles for deployment from the app repositories
 
 ## Structure
 
-- `modules/`: Reusable Terraform modules.
-- `envs/`: Environment-specific configurations (`dev`, `prod`).
-- `scripts/`: Utility scripts.
-- `.github/workflows/`: CI/CD pipelines.
+```text
+envs/
+├── dev/                 # Development environment root module
+└── prod/                # Production environment root module
+modules/
+├── cicd/                # GitHub Actions OIDC IAM roles
+├── compute/             # API Gateway, Lambda, SQS, IAM, alarms
+├── dns/                 # Cloudflare DNS records
+├── email/               # SES identities and email auth
+├── frontend/            # S3 + CloudFront frontend hosting
+├── identity/            # Cognito user pool, app clients, hosted UI
+├── persistence/         # DynamoDB tables
+├── secrets/             # SSM Parameter placeholders
+└── static_content/      # Static content buckets/CDN
+lambdas/                 # Cognito trigger Lambda source
+scripts/                 # Operational helper scripts
+docs/                    # Setup and architecture notes
+```
 
-## Getting Started
+## Local Setup
 
-### Prerequisites
+Prerequisites:
 
-- AWS CLI configured
-- Terraform >= 1.0
+- Terraform
+- AWS CLI credentials for the target account
+- Cloudflare API token with DNS edit permissions for the target zone
 
-### Setup Secrets
+```bash
+cp .env.example .envrc
+```
 
-Use the helper script to push required API keys to AWS SSM Parameter Store:
+Fill in `.envrc`, then load it with `direnv allow` or `source .envrc`.
+
+## Secrets
+
+Terraform creates SSM Parameter Store placeholders for runtime secrets. The placeholders intentionally use `ignore_changes` so raw secret values are not managed in Terraform state.
+
+Use the helper script for the core API secrets:
 
 ```bash
 ./scripts/setup_secrets.sh dev
+./scripts/setup_secrets.sh prod
 ```
 
-### Deployment
+Some secrets, such as Stripe webhook secrets and CloudFront private keys, may still need to be populated directly in SSM depending on the environment. Never commit `.tfvars` files with private values, Terraform state, Cloudflare tokens, or generated Lambda packages.
 
-To deploy the development environment:
+## Planning and Applying
+
+Development:
 
 ```bash
-# 1. Bootstrap the state bucket (first time only)
-./scripts/bootstrap_state_bucket.sh
-
-# 2. Initialize Terraform
 cd envs/dev
 terraform init
-
-# 3. Review and apply
 terraform plan
 terraform apply
 ```
 
-## CI/CD Setup
+Production:
 
-This repository uses GitHub Actions with AWS OIDC authentication for Terraform deployments.
+```bash
+cd envs/prod
+terraform init
+terraform plan
+terraform apply
+```
 
-### Initial Setup
+Review plans carefully before applying. Infrastructure changes can affect live production traffic.
 
-1. **Create the OIDC Provider in AWS** (one-time setup):
-   ```bash
-   aws iam create-open-id-connect-provider \
-     --url https://token.actions.githubusercontent.com \
-     --client-id-list sts.amazonaws.com \
-     --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
-   ```
+## CI/CD Integration
 
-2. **Deploy the Infrastructure** (including the GitHub Actions IAM role):
-   ```bash
-   cd envs/dev
-   terraform init
-   terraform apply
-   ```
+The `modules/cicd` module creates GitHub Actions OIDC roles used by the API, web, and infrastructure workflows. The application repositories expect an `AWS_ROLE_ARN` GitHub Actions secret that points at the appropriate role.
 
-3. **Get the IAM Role ARN**:
-   ```bash
-   terraform output -raw github_actions_role_arn
-   ```
+## Documentation
 
-4. **Configure GitHub Secrets**:
-   - Go to your GitHub repository → Settings → Secrets and variables → Actions
-   - Add the following secrets:
-     - `AWS_ROLE_ARN`: The ARN from step 3 (e.g., `arn:aws:iam::123456789012:role/cosmonaut-github-actions-role`)
-     - `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token with DNS edit permissions
+Start with [`docs/README.md`](docs/README.md). The most useful references are:
 
-### Troubleshooting
+- [`docs/structure.md`](docs/structure.md): module map and design notes.
+- [`docs/cloudflare-setup.md`](docs/cloudflare-setup.md): Cloudflare DNS and token setup.
+- [`docs/email-password-auth-setup.md`](docs/email-password-auth-setup.md): Cognito email/password setup notes.
+- [`docs/audio-implementation.md`](docs/audio-implementation.md): infrastructure support for narration.
 
-If you see the error "Credentials could not be loaded, please check your action inputs":
-- Ensure `AWS_ROLE_ARN` is set in GitHub repository secrets
-- Verify the OIDC provider exists in AWS (see step 1 above)
-- Check that the IAM role exists and has the correct trust policy
-- Ensure the GitHub repository name matches one of the entries in the `github_repos` list variable in your Terraform configuration
+## Security
 
-## Architecture
+See [`SECURITY.md`](SECURITY.md) for disclosure and secret-handling guidance.
 
-See `docs/structure.md` and `docs/project-description.md` for detailed architecture and project goals.
+## Contributing
 
+Issues and pull requests are welcome. For Terraform changes, include the relevant `terraform plan` output summary and avoid committing generated local state or provider caches.
+
+## License
+
+Apache-2.0. See [`LICENSE`](LICENSE).

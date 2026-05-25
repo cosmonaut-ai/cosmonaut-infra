@@ -1,101 +1,80 @@
-### The Folder Structure (Cosmonaut AI)
+# Infrastructure Structure
+
+`cosmonaut-infra` is organized around environment root modules in `envs/` and reusable Terraform modules in `modules/`.
 
 ```text
 cosmonaut-infra/
-├── .github/
-│   └── workflows/
-│       ├── plan.yml                # PRs: Terraform Plan
-│       └── apply.yml               # Merge: Terraform Apply
-├── modules/
-│   ├── identity/                   # Cognito (Google Auth)
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── persistence/                # DynamoDB (Game State)
-│   │   ├── main.tf                 # Single Table Definition
-│   │   └── outputs.tf
-│   ├── secrets/                    # SSM Parameter Store (API Keys)
-│   │   ├── main.tf                 # 'aws_ssm_parameter' resources
-│   │   └── variables.tf
-│   ├── compute/                    # API Gateway + Lambdas
-│   │   ├── main.tf                 # HTTP API v2
-│   │   ├── iam.tf                  # Permissions (Lambda -> Dynamo/SSM)
-│   │   └── variables.tf
-│   ├── frontend/                   # S3 + CloudFront + Route53
-│   │   ├── main.tf
-│   │   ├── acm.tf                  # SSL Certificate
-│   │   └── policies.json           # OAC Policy (Block public S3 access)
-│   └── cicd/                       # OIDC for GitHub Actions
-│       └── main.tf
 ├── envs/
 │   ├── dev/
-│   │   ├── main.tf                 # Instantiates modules
-│   │   ├── backend.tf              # S3 State backend
-│   │   └── terraform.tfvars        # domain = "dev.cosmonaut-ai.com"
+│   │   ├── backend.tf
+│   │   ├── main.tf
+│   │   └── terraform.tfvars       # ignored locally when private values are present
 │   └── prod/
-│       ├── main.tf
 │       ├── backend.tf
-│       └── terraform.tfvars        # domain = "cosmonaut-ai.com"
+│       ├── main.tf
+│       └── terraform.tfvars       # ignored locally when private values are present
+├── lambdas/
+│   ├── custom_message/            # Cognito custom-message trigger source
+│   └── pre_sign_up/               # Cognito pre-sign-up trigger source
+├── modules/
+│   ├── cicd/                      # GitHub Actions OIDC roles
+│   ├── compute/                   # API Gateway, Lambda functions, SQS, IAM, alarms
+│   ├── dns/                       # Cloudflare DNS records
+│   ├── email/                     # SES identities and records
+│   ├── frontend/                  # S3 + CloudFront frontend hosting
+│   ├── identity/                  # Cognito user pool, app clients, identity providers
+│   ├── persistence/               # DynamoDB tables
+│   ├── secrets/                   # SSM Parameter Store placeholders
+│   └── static_content/            # Static content bucket/CDN resources
 ├── scripts/
-│   └── setup_secrets.sh            # Helper to push keys to SSM manually
-├── .gitignore
-└── README.md
-
+│   └── setup_secrets.sh           # Helper for populating selected SSM secrets
+└── docs/
 ```
 
----
+## Environment Roots
 
-### Module Details
+`envs/dev` and `envs/prod` instantiate the same module set with environment-specific names, domains, URLs, Stripe price IDs, Cognito callback URLs, and deployment role configuration.
 
-#### 1. `modules/secrets` (The Free "Vault")
+Run Terraform from the environment directory:
 
-Instead of creating secrets _inside_ Terraform (which puts the raw value in your state file—a security risk), this module should define **placeholders** or data sources, and you use the CLI to populate them.
-
-- **Resource:** `aws_ssm_parameter`
-- **Type:** `SecureString`
-- **Key ID:** `alias/aws/ssm` (The default free key).
-- **Logic:**
-
-```hcl
-resource "aws_ssm_parameter" "pinecone_key" {
-  name  = "/${var.env}/cosmonaut/pinecone_api_key"
-  type  = "SecureString"
-  value = "CHANGE_ME_IN_CONSOLE" # Terraform creates it, you update it manually
-  lifecycle {
-    ignore_changes = [value] # Terraform won't overwrite your manual update
-  }
-}
-
+```bash
+cd envs/dev
+terraform init
+terraform plan
+terraform apply
 ```
 
-#### 2. `modules/compute` (Accessing the Secrets)
+## Module Notes
 
-Your Lambda needs permission to decrypt these keys at runtime.
+### `modules/secrets`
 
-- **IAM Policy:**
+Creates SSM Parameter Store placeholders for runtime secrets. The placeholder resources use `ignore_changes` so Terraform tracks the parameter names and ARNs without storing updated secret values in source control or state diffs.
 
-```hcl
-statement {
-  actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-  resources = ["arn:aws:ssm:us-east-2:*:parameter/${var.env}/cosmonaut/*"]
-}
+Examples include:
 
-```
+- `/<env>/cosmonaut/pinecone_api_key`
+- `/<env>/cosmonaut/google_client_secret`
+- `/<env>/cosmonaut/cloudfront_private_key`
+- `/<env>/cosmonaut/stripe_api_key`
+- `/<env>/cosmonaut/stripe_webhook_secret`
+- `/<env>/cosmonaut/elevenlabs_api_key`
 
-- **Python Logic:** Your Lambda code calls `boto3.client('ssm').get_parameter(...)` during initialization.
+### `modules/compute`
 
-#### 3. `modules/frontend` (Best Practice for SPAs)
+Defines the API Gateway, Lambda functions, SQS queues, IAM permissions, environment variables, and alarms for the API and workers. Lambda code is deployed from the application repository CI/CD flow.
 
-- **Resource:** `aws_cloudfront_distribution`
-- **Key Config:** `custom_error_response`
-- **Error Code:** `403` and `404`
-- **Response Page:** `/index.html`
-- **Response Code:** `200`
-- _Why:_ This enables "Client Side Routing." If a user refreshes the page at `cosmonaut-ai.com/story/123`, CloudFront won't find that file. It must serve `index.html` so SvelteKit can handle the URL.
+### `modules/frontend`
 
-#### 4. `modules/identity` (Google Sign-In)
+Defines S3 and CloudFront resources for the static web frontend. The web repository deploy workflow builds the SvelteKit app and syncs the `build/` output to these resources.
 
-- **Resource:** `aws_cognito_user_pool`
-- **Resource:** `aws_cognito_identity_provider`
-- **Config:** You will need to input your **Google Client ID** and **Client Secret** here.
-- _Tip:_ Store the Google Client Secret in SSM Parameter Store too, and reference it here!
+### `modules/identity`
+
+Defines Cognito user pools, app clients, OAuth provider configuration, and trigger Lambda wiring for authentication. Google client secrets are read from SSM Parameter Store.
+
+### `modules/cicd`
+
+Defines OIDC trust and IAM roles used by GitHub Actions. Keep trust policies scoped to the expected organization, repositories, branches, and workflow needs.
+
+## Public Repository Notes
+
+The repository intentionally exposes infrastructure topology, public domains, and public client identifiers. It must not expose Terraform state, raw secret values, private `.tfvars` values, provider caches, or generated deployment packages.
