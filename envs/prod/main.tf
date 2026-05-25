@@ -191,7 +191,6 @@ variable "pinecone_index_name" {
 variable "alarm_notification_email" {
   type        = string
   description = "Email address to receive CloudWatch alarm notifications"
-  default     = "imatson9119@gmail.com"
 }
 
 variable "posthog_project_token" {
