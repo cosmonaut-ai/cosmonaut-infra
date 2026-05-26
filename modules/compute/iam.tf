@@ -222,6 +222,7 @@ resource "aws_iam_policy" "lambda_extra" {
           "cognito-idp:AdminDisableUser",
           "cognito-idp:AdminEnableUser",
           "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminListGroupsForUser",
           "cognito-idp:AdminUserGlobalSignOut",
           "cognito-idp:ListUsers"
         ]
