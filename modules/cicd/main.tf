@@ -95,6 +95,7 @@ resource "aws_iam_policy" "github_actions_deploy" {
         Sid    = "LambdaLayerDownload"
         Effect = "Allow"
         Action = [
+          "lambda:GetLayerVersion",
           "lambda:GetLayerVersionByArn",
         ]
         Resource = "arn:aws:lambda:us-east-2:590474943231:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:25"
