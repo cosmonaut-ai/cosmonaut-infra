@@ -125,11 +125,6 @@ variable "buttondown_key_name" {
   type        = string
 }
 
-variable "admin_api_key_name" {
-  description = "Name of the admin portal API key"
-  type        = string
-}
-
 variable "domain_name" {
   description = "The domain name for the API (e.g., api.cosmonaut-ai.com)"
   type        = string

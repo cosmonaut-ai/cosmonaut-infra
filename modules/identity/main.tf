@@ -161,6 +161,20 @@ resource "aws_cognito_user_pool_client" "main" {
   depends_on = [aws_cognito_identity_provider.google]
 }
 
+resource "aws_cognito_user_group" "owner" {
+  name         = "Owner"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "Cosmonaut owners with full administrative access"
+  precedence   = 0
+}
+
+resource "aws_cognito_user_group" "admin" {
+  name         = "Admin"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "Cosmonaut administrators"
+  precedence   = 10
+}
+
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "cosmonaut-${var.env}"
   user_pool_id = aws_cognito_user_pool.main.id
