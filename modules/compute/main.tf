@@ -80,7 +80,7 @@ resource "aws_sqs_queue" "slow_dlq" {
 # SQS queues for async processing
 resource "aws_sqs_queue" "fast" {
   name                       = "cosmonaut-${var.env}-fast"
-  visibility_timeout_seconds = 60
+  visibility_timeout_seconds = 360
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.fast_dlq.arn

@@ -196,20 +196,26 @@ resource "aws_wafv2_web_acl" "api_protection" {
 resource "aws_cloudfront_function" "cors_preflight" {
   name    = "cosmonaut-${var.env}-cors-preflight"
   runtime = "cloudfront-js-1.0"
-  comment = "Handle CORS preflight OPTIONS requests"
+  comment = "Handle CORS preflight OPTIONS requests with origin allowlist"
   publish = true
   code    = <<EOF
 function handler(event) {
     var request = event.request;
     var headers = request.headers;
     var origin = headers.origin ? headers.origin.value : '';
+    var allowed = ${jsonencode(var.cors_allowed_origins)};
 
     if (request.method === 'OPTIONS') {
+        var matchedOrigin = '';
+        for (var i = 0; i < allowed.length; i++) {
+            if (origin === allowed[i]) { matchedOrigin = origin; break; }
+        }
+        if (!matchedOrigin) { return request; }
         var response = {
             statusCode: 204,
             statusDescription: 'No Content',
             headers: {
-                'access-control-allow-origin': { value: origin },
+                'access-control-allow-origin': { value: matchedOrigin },
                 'access-control-allow-methods': { value: 'GET, POST, PUT, DELETE, PATCH, OPTIONS' },
                 'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token, X-PostHog-Distinct-Id, X-PostHog-Session-Id'},
                 'access-control-allow-credentials': { value: 'true' },
