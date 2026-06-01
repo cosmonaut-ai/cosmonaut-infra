@@ -306,7 +306,7 @@ resource "aws_cloudfront_distribution" "api" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/worlds/*/nodes/*/generate-text*"
+    path_pattern     = "/sessions/*/nodes/*/generate-text*"
     target_origin_id = "LambdaOrigin"
 
     allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
