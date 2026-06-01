@@ -278,8 +278,8 @@ resource "aws_lambda_function_url" "api" {
 
   cors {
     allow_origins  = var.cors_allowed_origins
-    allow_headers  = ["content-type", "authorization", "x-posthog-distinct-id", "x-posthog-session-id"]
-    expose_headers = ["content-type", "x-new-node-id"]
+    allow_headers  = local.api_cors_allowed_headers
+    expose_headers = local.api_cors_exposed_headers
     max_age        = 300
   }
 }

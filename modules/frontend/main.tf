@@ -217,7 +217,7 @@ function handler(event) {
             headers: {
                 'access-control-allow-origin': { value: matchedOrigin },
                 'access-control-allow-methods': { value: 'GET, POST, PUT, DELETE, PATCH, OPTIONS' },
-                'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token, X-PostHog-Distinct-Id, X-PostHog-Session-Id'},
+                'access-control-allow-headers': { value: 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token, X-PostHog-Distinct-Id, X-PostHog-Session-Id, Sentry-Trace, Baggage' },
                 'access-control-allow-credentials': { value: 'true' },
                 'access-control-max-age': { value: '300' }
             }
@@ -269,7 +269,7 @@ resource "aws_cloudfront_response_headers_policy" "api_cors" {
     access_control_allow_credentials = true
 
     access_control_allow_headers {
-      items = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-PostHog-Distinct-Id", "X-PostHog-Session-Id"]
+      items = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-PostHog-Distinct-Id", "X-PostHog-Session-Id", "Sentry-Trace", "Baggage"]
     }
 
     access_control_allow_methods {

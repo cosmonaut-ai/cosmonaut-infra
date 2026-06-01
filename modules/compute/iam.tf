@@ -4,6 +4,16 @@ data "aws_caller_identity" "current" {}
 locals {
   # These methods require authentication
   auth_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+
+  api_cors_allowed_headers = [
+    "content-type",
+    "authorization",
+    "x-posthog-distinct-id",
+    "x-posthog-session-id",
+    "sentry-trace",
+    "baggage",
+  ]
+  api_cors_exposed_headers = ["content-type", "x-new-node-id"]
 }
 
 resource "aws_apigatewayv2_api" "main" {
@@ -13,8 +23,8 @@ resource "aws_apigatewayv2_api" "main" {
   cors_configuration {
     allow_origins     = var.cors_allowed_origins
     allow_methods     = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-    allow_headers     = ["content-type", "authorization"]
-    expose_headers    = ["content-type"]
+    allow_headers     = local.api_cors_allowed_headers
+    expose_headers    = local.api_cors_exposed_headers
     allow_credentials = true
     max_age           = 300
   }
