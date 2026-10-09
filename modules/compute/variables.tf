@@ -229,13 +229,13 @@ variable "model_small" {
 variable "model_large" {
   description = "Vertex AI model name for large/complex tasks (Gemini)"
   type        = string
-  default     = "gemini-3.1-pro-preview"
+  default     = "gemini-3.8-flash"
 }
 
 variable "model_small_anthropic" {
   description = "Vertex AI model name for small tasks (Anthropic)"
   type        = string
-  default     = "claude-haiku-4-5"
+  default     = "claude-haiku-5-5"
 }
 
 variable "posthog_project_token" {
