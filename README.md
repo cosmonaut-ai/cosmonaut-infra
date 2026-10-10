@@ -92,7 +92,29 @@ Review plans carefully before applying. Infrastructure changes can affect live p
 
 ## CI/CD Integration
 
-The `modules/cicd` module creates GitHub Actions OIDC roles used by the API, web, and infrastructure workflows. The application repositories expect an `AWS_ROLE_ARN` GitHub Actions secret that points at the appropriate role.
+The `modules/cicd` module creates the GitHub Actions OIDC deploy role used by the API and web workflows. The application repositories expect an `AWS_ROLE_ARN` GitHub Actions secret that points at that role.
+
+This repository runs Terraform through `.github/workflows/terraform.yml`:
+
+- Pull requests to `main` run `terraform plan` for dev and prod and post each plan as a pull request comment.
+- Pushes to `main` apply dev, then apply prod after a reviewer approves the `prod` GitHub environment.
+
+The workflow uses two roles from `modules/terraform_ci`, which is managed by the dev environment:
+
+- `cosmonaut-terraform-plan`: read-only, assumable only by pull request jobs in this repository.
+- `cosmonaut-terraform-apply`: administrator, assumable only by jobs in the `dev` and `prod` GitHub environments of this repository.
+
+It reads this GitHub configuration:
+
+| Name | Kind | Value |
+|---|---|---|
+| `TF_PLAN_ROLE_ARN` | Variable | ARN of `cosmonaut-terraform-plan` |
+| `TF_APPLY_ROLE_ARN` | Variable | ARN of `cosmonaut-terraform-apply` |
+| `TF_VARS_DEV` | Variable | `.tfvars` content for `envs/dev`, without `cloudflare_api_token` |
+| `TF_VARS_PROD` | Variable | `.tfvars` content for `envs/prod`, without `cloudflare_api_token` |
+| `CLOUDFLARE_API_TOKEN` | Secret | Cloudflare token passed as `TF_VAR_cloudflare_api_token` |
+
+This repository is public, so workflow logs and plan comments are public. Keep secret values in `sensitive` variables or SSM, never in `TF_VARS_*`.
 
 ## Documentation
 
